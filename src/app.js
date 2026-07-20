@@ -11,6 +11,7 @@ import {
   saveProfile,
 } from './firestore.js'
 import { uploadFile, deleteStorageFile, uploadProfilePhoto } from './storage.js'
+import { testFirebaseConnection } from './firebase.js'
 import {
   showNotification,
   closeModal,
@@ -68,6 +69,15 @@ class FolderPersonal {
     this.loadData()
     this.showProfileView()
     this.loadProfile()
+    testFirebaseConnection().then((res) => {
+      console.log('[App] Conexion Firebase:', res)
+      if (!res.storage) {
+        showNotification(
+          'Storage no accesible. Revisa las reglas de seguridad en Firebase Console.',
+          'error'
+        )
+      }
+    })
   }
 
   showProfileView() {
@@ -529,8 +539,17 @@ class FolderPersonal {
       } else {
         this.render()
       }
-    } catch {
-      showNotification(`Error al subir ${file.name}`, 'error')
+    } catch (err) {
+      console.error('[Upload] Error:', err)
+      const msg =
+        err?.code === 'storage/unauthorized'
+          ? 'Permiso denegado. Revisa reglas de Storage en Firebase Console.'
+          : err?.code === 'storage/canceled'
+          ? 'Subida cancelada.'
+          : err?.code === 'storage/retry-limit-exceeded'
+          ? 'Limite de reintentos excedido. Revisa tu conexion.'
+          : `Error al subir ${file.name}: ${err?.message || 'desconocido'}`
+      showNotification(msg, 'error')
     }
     if (progressDiv) progressDiv.style.display = 'none'
   }
