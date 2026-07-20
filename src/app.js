@@ -72,6 +72,7 @@ class FolderPersonal {
 
   showProfileView() {
     this.currentFilter = 'profile'
+    this.currentFolderId = null
     document.getElementById('itemsGrid').style.display = 'none'
     document.getElementById('emptyState').style.display = 'none'
     document.getElementById('profileView').style.display = 'block'
@@ -260,12 +261,14 @@ class FolderPersonal {
     if (el) el.textContent = titles[this.currentFilter] || 'Archivos'
 
     if (this.currentFilter === 'profile') {
+      this.currentFolderId = null
       document.getElementById('itemsGrid').style.display = 'none'
       document.getElementById('emptyState').style.display = 'none'
       document.getElementById('profileView').style.display = 'block'
       document.getElementById('itemsCount').style.display = 'none'
       document.getElementById('btnAdd').style.display = 'none'
     } else {
+      this.currentFolderId = null
       document.getElementById('itemsGrid').style.display = 'grid'
       document.getElementById('profileView').style.display = 'none'
       document.getElementById('itemsCount').style.display = 'block'
@@ -501,7 +504,7 @@ class FolderPersonal {
         if (progressText) progressText.textContent = `Subiendo ${file.name}... ${Math.round(p)}%`
         if (progressFill) progressFill.style.width = `${p}%`
       })
-      await addItem(this.userId, {
+      const docRef = await addItem(this.userId, {
         name: file.name,
         type,
         size: formatFileSize(file.size),
@@ -509,10 +512,22 @@ class FolderPersonal {
         path: filePath,
         folderId: this.currentFolderId,
       })
+      this.items.unshift({
+        id: docRef.id,
+        name: file.name,
+        type,
+        size: formatFileSize(file.size),
+        url: downloadURL,
+        path: filePath,
+        folderId: this.currentFolderId,
+        createdAt: new Date(),
+      })
       showNotification(`${file.name} subido correctamente`, 'success')
       if (this.currentFilter === 'profile') {
         const btn = document.querySelector(`[data-filter="${type}"]`)
         if (btn) this.filterItems(btn)
+      } else {
+        this.render()
       }
     } catch {
       showNotification(`Error al subir ${file.name}`, 'error')
@@ -533,7 +548,7 @@ class FolderPersonal {
     closeModal(document.getElementById('addModal'))
     const ogData = await this.getOpenGraphData(url)
     try {
-      await addItem(this.userId, {
+      const docRef = await addItem(this.userId, {
         name: customTitle || ogData.title || url,
         type: 'link',
         url,
@@ -541,10 +556,22 @@ class FolderPersonal {
         description: ogData.description || null,
         folderId: this.currentFolderId,
       })
+      this.items.unshift({
+        id: docRef.id,
+        name: customTitle || ogData.title || url,
+        type: 'link',
+        url,
+        image: ogData.image || null,
+        description: ogData.description || null,
+        folderId: this.currentFolderId,
+        createdAt: new Date(),
+      })
       showNotification('Enlace agregado', 'success')
       if (this.currentFilter === 'profile') {
         const btn = document.querySelector('[data-filter="link"]')
         if (btn) this.filterItems(btn)
+      } else {
+        this.render()
       }
       if (linkInput) linkInput.value = ''
       if (linkTitleInput) linkTitleInput.value = ''
