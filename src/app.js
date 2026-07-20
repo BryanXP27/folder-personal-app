@@ -42,11 +42,18 @@ class FolderPersonal {
       const mainEl = document.querySelector('.container')
 
       if (user) {
+        console.log('[Auth] Usuario autenticado:', user.email, 'uid:', user.uid)
         this.userId = user.uid
+        if (!this.userId) {
+          console.error('[Auth] ERROR: user.uid es undefined!', user)
+          showNotification('Error de autenticacion: uid no encontrado', 'error')
+          return
+        }
         loginEl.classList.add('hidden')
         mainEl.style.display = 'flex'
         this.startApp()
       } else {
+        console.log('[Auth] No hay usuario autenticado')
         this.userId = null
         if (this.unsubscribeItems) this.unsubscribeItems()
         if (this.unsubscribeFolders) this.unsubscribeFolders()
@@ -64,6 +71,7 @@ class FolderPersonal {
     const user = getUser()
     document.getElementById('userEmail').textContent = user.email
     document.getElementById('profileEmail').textContent = user.email
+    document.getElementById('userBadge').textContent = user.email
     applyTheme(getSavedTheme())
     this.setupAppListeners()
     this.loadData()
@@ -492,7 +500,12 @@ class FolderPersonal {
   }
 
   handleFileSelect(files) {
-    if (!files.length || !this.userId) return
+    if (!files.length) return
+    if (!this.userId) {
+      showNotification('Error: No hay sesion activa. Cierra sesion y vuelve a iniciar.', 'error')
+      console.error('[Upload] this.userId es null/undefined')
+      return
+    }
     closeModal(document.getElementById('addModal'))
     for (const file of files) {
       const type = getFileType(file.type, file.name)
@@ -559,8 +572,13 @@ class FolderPersonal {
     const linkTitleInput = document.getElementById('linkTitle')
     const url = linkInput?.value.trim() || ''
     const customTitle = linkTitleInput?.value.trim() || ''
-    if (!url || !this.userId) {
+    if (!url) {
       showNotification('Ingresa una URL', 'error')
+      return
+    }
+    if (!this.userId) {
+      showNotification('Error: No hay sesion activa. Cierra sesion y vuelve a iniciar.', 'error')
+      console.error('[AddLink] this.userId es null')
       return
     }
     showNotification('Obteniendo vista previa...', 'info')
