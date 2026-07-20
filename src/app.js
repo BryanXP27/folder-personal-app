@@ -1,4 +1,6 @@
-import { onAuth, login, logout, getUser } from './auth.js'
+import { onAuth, login, logout } from './auth.js'
+
+const PORTFOLIO_UID = '2yfOh8VB1cPSbEfFnRSfdzDR6eh2'
 import {
   subscribeItems,
   subscribeFolders,
@@ -35,48 +37,56 @@ class FolderPersonal {
     this.unsubscribeProfile = null
     this.onConfirm = null
     this.pendingPhotoURL = null
+    this.isOwner = false
+    this.userId = PORTFOLIO_UID
+
+    document.querySelector('.container').style.display = 'flex'
+    document.getElementById('loginContainer').classList.add('hidden')
+
+    this.setupLoginListeners()
+    this.startApp()
 
     onAuth((user) => {
-      const loginEl = document.getElementById('loginContainer')
-      const mainEl = document.querySelector('.container')
-
-      if (user) {
-        console.log('[Auth] Usuario autenticado:', user.email, 'uid:', user.uid)
-        this.userId = user.uid
-        if (!this.userId) {
-          console.error('[Auth] ERROR: user.uid es undefined!', user)
-          showNotification('Error de autenticacion: uid no encontrado', 'error')
-          return
-        }
-        loginEl.classList.add('hidden')
-        mainEl.style.display = 'flex'
-        this.startApp()
+      if (user && user.uid === PORTFOLIO_UID) {
+        console.log('[Auth] Propietario autenticado:', user.email)
+        this.isOwner = true
+        this.onOwnerReady()
+      } else if (user) {
+        console.log('[Auth] Otro usuario:', user.email)
+        this.isOwner = false
+        this.onVisitorMode()
       } else {
-        console.log('[Auth] No hay usuario autenticado')
-        this.userId = null
-        if (this.unsubscribeItems) this.unsubscribeItems()
-        if (this.unsubscribeFolders) this.unsubscribeFolders()
-        if (this.unsubscribeProfile) this.unsubscribeProfile()
-        this.items = []
-        this.folders = []
-        loginEl.classList.remove('hidden')
-        mainEl.style.display = 'none'
-        this.setupLoginListeners()
+        console.log('[Auth] Visitante')
+        this.isOwner = false
+        this.onVisitorMode()
       }
     })
   }
 
+  onOwnerReady() {
+    document.getElementById('userEmail').textContent = 'brayan@undc.edu.pe'
+    document.getElementById('userBadge').textContent = 'brayan@undc.edu.pe'
+    document.getElementById('btnLoginHeader').style.display = 'none'
+    document.getElementById('btnAdd').style.display = 'flex'
+    document.getElementById('btnNewFolder').style.display = 'inline-flex'
+    document.getElementById('profileEmail').textContent = 'brayan@undc.edu.pe'
+    this.loadProfile()
+  }
+
+  onVisitorMode() {
+    document.getElementById('btnLoginHeader').style.display = 'inline-flex'
+    document.getElementById('btnAdd').style.display = 'none'
+    document.getElementById('btnNewFolder').style.display = 'none'
+    document.getElementById('profileEmail').textContent = 'cargando...'
+  }
+
   startApp() {
-    const user = getUser()
-    document.getElementById('userEmail').textContent = user.email
-    document.getElementById('profileEmail').textContent = user.email
-    document.getElementById('userBadge').textContent = user.email
     applyTheme(getSavedTheme())
     this.setupAppListeners()
     this.loadData()
     this.showProfileView()
     this.loadProfile()
-    console.log('[App] Usando Cloudinary como almacenamiento')
+    console.log('[App] Portafolio publico cargado')
   }
 
   showProfileView() {
@@ -91,6 +101,7 @@ class FolderPersonal {
     document.querySelectorAll('.nav-item').forEach((b) => b.classList.remove('active'))
     const profileBtn = document.querySelector('[data-filter="profile"]')
     if (profileBtn) profileBtn.classList.add('active')
+    document.getElementById('btnEditProfile').style.display = this.isOwner ? 'inline-block' : 'none'
   }
 
   loadData() {
@@ -151,6 +162,10 @@ class FolderPersonal {
     const clone = btn.cloneNode(true)
     btn.parentNode.replaceChild(clone, btn)
     clone.addEventListener('click', () => this.handleLogin())
+
+    document.getElementById('btnLoginHeader')?.addEventListener('click', () => {
+      openModal(document.getElementById('loginModal'))
+    })
   }
 
   async handleLogin() {
@@ -164,6 +179,7 @@ class FolderPersonal {
     try {
       errEl.textContent = ''
       await login(email, password)
+      closeModal(document.getElementById('loginModal'))
     } catch {
       errEl.textContent = 'Correo o contraseña incorrectos.'
     }
@@ -385,6 +401,10 @@ class FolderPersonal {
   }
 
   promptNewFolder() {
+    if (!this.isOwner) {
+      showNotification('Debes iniciar sesion como propietario.', 'error')
+      return
+    }
     const name = prompt('Nombre de la nueva carpeta:')
     if (name && name.trim()) {
       addFolder(this.userId, name.trim(), this.currentFolderId)
@@ -501,7 +521,7 @@ class FolderPersonal {
     const btnDownload = document.getElementById('btnDownload')
     const btnEdit = document.getElementById('btnEditItem')
     title.textContent = this.selectedItem.name
-    document.getElementById('btnDelete').style.display = 'inline-block'
+    document.getElementById('btnDelete').style.display = this.isOwner ? 'inline-block' : 'none'
 
     const itemPreview = this.selectedItem.preview || (this.selectedItem.type === 'link' ? this.selectedItem.image : null)
 
@@ -531,15 +551,14 @@ class FolderPersonal {
       body.innerHTML = `<div class="view-document">${docPreview}<p style="margin-top:12px">${this.selectedItem.name}</p><p style="font-size:12px;color:var(--text-secondary)">${this.selectedItem.size}</p></div>`
       btnDownload.style.display = 'inline-block'
     }
-    btnEdit.style.display = 'inline-block'
+    btnEdit.style.display = this.isOwner ? 'inline-block' : 'none'
     openModal(modal)
   }
 
   handleFileSelect(files) {
     if (!files.length) return
-    if (!this.userId) {
-      showNotification('Error: No hay sesion activa. Cierra sesion y vuelve a iniciar.', 'error')
-      console.error('[Upload] this.userId es null/undefined')
+    if (!this.isOwner) {
+      showNotification('Debes iniciar sesion como propietario para subir archivos.', 'error')
       return
     }
     const previewUrl = document.getElementById('previewUrl')?.value.trim() || null
@@ -612,9 +631,8 @@ class FolderPersonal {
       showNotification('Ingresa una URL', 'error')
       return
     }
-    if (!this.userId) {
-      showNotification('Error: No hay sesion activa. Cierra sesion y vuelve a iniciar.', 'error')
-      console.error('[AddLink] this.userId es null')
+    if (!this.isOwner) {
+      showNotification('Debes iniciar sesion como propietario para agregar enlaces.', 'error')
       return
     }
     const manualPreview = document.getElementById('linkPreviewUrl')?.value.trim() || null
@@ -812,6 +830,10 @@ class FolderPersonal {
   }
 
   async saveProfileData() {
+    if (!this.isOwner) {
+      showNotification('Debes iniciar sesion como propietario.', 'error')
+      return
+    }
     const data = {
       name: document.getElementById('editName').value.trim(),
       career: document.getElementById('editCareer').value.trim(),
@@ -914,6 +936,10 @@ class FolderPersonal {
   }
 
   async handleProfilePhoto(file) {
+    if (!this.isOwner) {
+      showNotification('Debes iniciar sesion como propietario.', 'error')
+      return
+    }
     if (!file) return
     if (!file.type.startsWith('image/')) {
       showNotification('Solo se aceptan imágenes', 'error')

@@ -7,26 +7,25 @@
     <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
-    <!-- Login Screen -->
-    <div class="login-container" id="loginContainer">
-        <div class="login-box">
-            <div class="logo">
-                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
-                </svg>
-                <h1>Folder Personal</h1>
+    <!-- Login Modal -->
+    <div class="modal" id="loginModal">
+        <div class="modal-content" style="max-width:400px">
+            <div class="modal-header">
+                <h3>Iniciar Sesión (Propietario)</h3>
+                <button class="modal-close">&times;</button>
             </div>
-            <h3>Iniciar Sesión</h3>
-            <div class="form-group">
-                <label for="emailInput">Correo Electrónico</label>
-                <input type="email" id="emailInput" placeholder="tu@correo.com">
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="emailInput">Correo Electrónico</label>
+                    <input type="email" id="emailInput" placeholder="tu@correo.com">
+                </div>
+                <div class="form-group">
+                    <label for="passwordInput">Contraseña</label>
+                    <input type="password" id="passwordInput" placeholder="••••••••">
+                </div>
+                <button class="btn-primary" id="btnLogin" style="width:100%">Iniciar Sesión</button>
+                <p id="loginError" class="login-error"></p>
             </div>
-            <div class="form-group">
-                <label for="passwordInput">Contraseña</label>
-                <input type="password" id="passwordInput" placeholder="••••••••">
-            </div>
-            <button class="btn-primary" id="btnLogin">Iniciar Sesión</button>
-            <p id="loginError" class="login-error"></p>
         </div>
     </div>
 
@@ -122,6 +121,7 @@
                         </svg>
                         <span>Agregar</span>
                     </button>
+                    <button class="btn-secondary" id="btnLoginHeader" style="display:none;font-size:13px;padding:6px 14px">Iniciar Sesión</button>
                     <span class="user-badge" id="userBadge"></span>
                 </div>
             </header>
