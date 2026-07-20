@@ -785,6 +785,21 @@ body {
     max-width: 900px;
     margin: 0 auto;
     box-shadow: var(--shadow);
+    position: relative;
+    overflow: hidden;
+}
+
+.profile-card::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: url('https://upload.wikimedia.org/wikipedia/commons/5/59/UNDC_logo.jpg') center/cover no-repeat;
+    opacity: 0.12;
+    pointer-events: none;
+}
+
+.profile-card > * {
+    position: relative;
 }
 
 .profile-header {
