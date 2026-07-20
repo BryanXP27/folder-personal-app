@@ -33,14 +33,16 @@ class FolderPersonal {
     async initialize() {
         try {
             console.log('Inicializando Folder Personal v3.0...');
-            this.setupEventListeners();
-            this.applyTheme();
 
             // Esperar a que Firebase se inicialice desde index.html
             await this.waitForFirebase();
 
             // Autenticación anónima
             await this.anonymousSignIn();
+            
+            // Ahora que tenemos usuario, configuramos la UI y cargamos datos
+            this.setupEventListeners();
+            this.applyTheme();
 
             // Cargar datos desde Firestore
             this.loadItemsFromFirestore();
@@ -382,9 +384,7 @@ class FolderPersonal {
 
         try {
             const ogData = await this.getOpenGraphData(url);
-            if (!title && ogData.title) {
-                name: title,
-            }
+            // El bloque `if (!title && ogData.title)` era un error de sintaxis y no tenía efecto. Se ha eliminado.
 
             const itemsCollection = collection(this.db, 'users', this.userId, 'items');
             await addDoc(itemsCollection, {
