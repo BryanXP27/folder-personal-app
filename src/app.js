@@ -10,7 +10,7 @@ import {
   updateItem,
   saveProfile,
 } from './firestore.js'
-import { uploadFile, deleteStorageFile, uploadProfilePhoto } from './storage.js'
+import { uploadFile, deleteStorageFile, uploadProfilePhoto, uploadPreviewImage } from './storage.js'
 import { testFirebaseConnection } from './firebase.js'
 import {
   showNotification,
@@ -262,6 +262,26 @@ class FolderPersonal {
     document.getElementById('profilePhotoInput')?.addEventListener('change', (e) => {
       if (e.target.files.length) this.handleProfilePhoto(e.target.files[0])
     })
+
+    document.getElementById('btnEditItem')?.addEventListener('click', () => this.openEditItem())
+    document.getElementById('btnSaveEditItem')?.addEventListener('click', () => this.saveEditItem())
+    document.getElementById('btnCancelEditItem')?.addEventListener('click', () => {
+      closeModal(document.getElementById('editItemModal'))
+    })
+
+    document.getElementById('btnUploadLinkPreview')?.addEventListener('click', () => {
+      document.getElementById('linkPreviewFileInput')?.click()
+    })
+    document.getElementById('linkPreviewFileInput')?.addEventListener('change', (e) => {
+      if (e.target.files.length) this.handleLinkPreviewUpload(e.target.files[0])
+    })
+
+    document.getElementById('btnUploadEditPreview')?.addEventListener('click', () => {
+      document.getElementById('editPreviewFileInput')?.click()
+    })
+    document.getElementById('editPreviewFileInput')?.addEventListener('change', (e) => {
+      if (e.target.files.length) this.handleEditPreviewUpload(e.target.files[0])
+    })
   }
 
   filterItems(btn) {
@@ -439,14 +459,15 @@ class FolderPersonal {
 
   itemCard(item) {
     let preview = ''
-    if (item.type === 'image') {
+    const itemPreview = item.preview || (item.type === 'link' ? item.image : null)
+    if (itemPreview) {
+      preview = `<img src="${itemPreview}" alt="${item.name}" loading="lazy" style="object-fit:cover" onerror="this.style.display='none'">`
+    } else if (item.type === 'image') {
       preview = `<img src="${item.url}" alt="${item.name}" loading="lazy" onerror="this.style.display='none'">`
     } else if (item.type === 'video') {
       preview = `<video><source src="${item.url}"></video>`
     } else if (item.type === 'link') {
-      preview = item.image
-        ? `<img src="${item.image}" alt="${item.name}" style="object-fit:cover" onerror="this.style.display='none'">`
-        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
+      preview = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
     } else {
       preview = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
     }
@@ -470,8 +491,10 @@ class FolderPersonal {
     const title = document.getElementById('viewModalTitle')
     const body = document.getElementById('viewModalBody')
     const btnDownload = document.getElementById('btnDownload')
+    const btnEdit = document.getElementById('btnEditItem')
     title.textContent = this.selectedItem.name
     document.getElementById('btnDelete').style.display = 'inline-block'
+    const itemPreview = this.selectedItem.preview || (this.selectedItem.type === 'link' ? this.selectedItem.image : null)
 
     if (this.selectedItem.type === 'image') {
       body.innerHTML = `<div class="view-image"><img src="${this.selectedItem.url}" alt="${this.selectedItem.name}"></div>`
@@ -493,9 +516,13 @@ class FolderPersonal {
       }</a></div></div>`
       btnDownload.style.display = 'inline-block'
     } else {
-      body.innerHTML = `<div class="view-document"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>${this.selectedItem.name}</p><p style="font-size:12px;color:var(--text-secondary)">${this.selectedItem.size}</p></div>`
+      const docPreview = itemPreview
+        ? `<img src="${itemPreview}" style="max-width:100%;max-height:300px;object-fit:contain;border-radius:8px" onerror="this.style.display='none'">`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="64" height="64"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
+      body.innerHTML = `<div class="view-document">${docPreview}<p style="margin-top:12px">${this.selectedItem.name}</p><p style="font-size:12px;color:var(--text-secondary)">${this.selectedItem.size}</p></div>`
       btnDownload.style.display = 'inline-block'
     }
+    btnEdit.style.display = 'inline-block'
     openModal(modal)
   }
 
@@ -522,20 +549,23 @@ class FolderPersonal {
     const progressFill = document.getElementById('progressFill')
     const progressDiv = document.getElementById('uploadProgress')
     if (progressDiv) progressDiv.style.display = 'block'
+    const previewUrl = document.getElementById('previewUrl')?.value?.trim() || ''
     try {
       const { downloadURL, filePath } = await uploadFile(this.userId, file, (p) => {
         if (progressText) progressText.textContent = `Subiendo ${file.name}... ${Math.round(p)}%`
         if (progressFill) progressFill.style.width = `${p}%`
       })
-      const docRef = await addItem(this.userId, {
+      const itemData = {
         name: file.name,
         type,
         size: formatFileSize(file.size),
         url: downloadURL,
         path: filePath,
         folderId: this.currentFolderId,
-      })
-      this.items.unshift({
+      }
+      if (previewUrl) itemData.preview = previewUrl
+      const docRef = await addItem(this.userId, itemData)
+      const itemObj = {
         id: docRef.id,
         name: file.name,
         type,
@@ -544,7 +574,10 @@ class FolderPersonal {
         path: filePath,
         folderId: this.currentFolderId,
         createdAt: new Date(),
-      })
+      }
+      if (previewUrl) itemObj.preview = previewUrl
+      this.items.unshift(itemObj)
+      document.getElementById('previewUrl').value = ''
       showNotification(`${file.name} subido correctamente`, 'success')
       if (this.currentFilter === 'profile') {
         const btn = document.querySelector(`[data-filter="${type}"]`)
@@ -584,6 +617,8 @@ class FolderPersonal {
     showNotification('Obteniendo vista previa...', 'info')
     closeModal(document.getElementById('addModal'))
     const ogData = await this.getOpenGraphData(url)
+    const linkPreviewUrl = document.getElementById('linkPreviewUrl')?.value?.trim() || ''
+    const preview = linkPreviewUrl || ogData.image || null
     try {
       const docRef = await addItem(this.userId, {
         name: customTitle || ogData.title || url,
@@ -591,6 +626,7 @@ class FolderPersonal {
         url,
         image: ogData.image || null,
         description: ogData.description || null,
+        preview: preview || null,
         folderId: this.currentFolderId,
       })
       this.items.unshift({
@@ -600,6 +636,7 @@ class FolderPersonal {
         url,
         image: ogData.image || null,
         description: ogData.description || null,
+        preview: preview || null,
         folderId: this.currentFolderId,
         createdAt: new Date(),
       })
@@ -612,6 +649,8 @@ class FolderPersonal {
       }
       if (linkInput) linkInput.value = ''
       if (linkTitleInput) linkTitleInput.value = ''
+      document.getElementById('linkPreviewUrl').value = ''
+      document.getElementById('linkPreviewImg').style.display = 'none'
     } catch {
       showNotification('Error al agregar enlace', 'error')
     }
@@ -790,6 +829,81 @@ class FolderPersonal {
       showNotification('Foto lista. Guarda el perfil para confirmar.', 'success')
     } catch {
       showNotification('Error al subir foto', 'error')
+    }
+  }
+
+  openEditItem() {
+    const item = this.selectedItem
+    if (!item) return
+    document.getElementById('editItemTitle').textContent = `Editar: ${item.name}`
+    document.getElementById('editItemName').value = item.name
+    const itemPreview = item.preview || (item.type === 'link' ? item.image : null)
+    document.getElementById('editItemPreview').value = itemPreview || ''
+    const img = document.getElementById('editItemPreviewImg')
+    if (itemPreview) {
+      img.src = itemPreview
+      img.style.display = 'block'
+    } else {
+      img.style.display = 'none'
+    }
+    openModal(document.getElementById('editItemModal'))
+  }
+
+  async saveEditItem() {
+    const item = this.selectedItem
+    if (!item) return
+    const newName = document.getElementById('editItemName').value.trim()
+    const newPreview = document.getElementById('editItemPreview').value.trim() || null
+    if (!newName) {
+      showNotification('El nombre no puede estar vacío', 'error')
+      return
+    }
+    try {
+      await updateItem(this.userId, item.id, {
+        name: newName,
+        preview: newPreview,
+        image: item.type === 'link' && newPreview ? newPreview : item.image,
+      })
+      showNotification('Elemento actualizado', 'success')
+      closeModal(document.getElementById('editItemModal'))
+    } catch {
+      showNotification('Error al actualizar', 'error')
+    }
+  }
+
+  async handleLinkPreviewUpload(file) {
+    if (!file || !file.type.startsWith('image/')) {
+      showNotification('Solo imágenes', 'error')
+      return
+    }
+    showNotification('Subiendo imagen...', 'info')
+    try {
+      const url = await uploadPreviewImage(this.userId, file)
+      document.getElementById('linkPreviewUrl').value = url
+      const img = document.getElementById('linkPreviewImg')
+      img.src = url
+      img.style.display = 'block'
+      showNotification('Imagen lista', 'success')
+    } catch {
+      showNotification('Error al subir imagen', 'error')
+    }
+  }
+
+  async handleEditPreviewUpload(file) {
+    if (!file || !file.type.startsWith('image/')) {
+      showNotification('Solo imágenes', 'error')
+      return
+    }
+    showNotification('Subiendo imagen...', 'info')
+    try {
+      const url = await uploadPreviewImage(this.userId, file)
+      document.getElementById('editItemPreview').value = url
+      const img = document.getElementById('editItemPreviewImg')
+      img.src = url
+      img.style.display = 'block'
+      showNotification('Imagen lista', 'success')
+    } catch {
+      showNotification('Error al subir imagen', 'error')
     }
   }
 }

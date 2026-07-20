@@ -29,6 +29,24 @@ export async function deleteStorageFile(filePath) {
   return deleteObject(storageRef)
 }
 
+export async function uploadPreviewImage(userId, file) {
+  const filePath = `${userId}/previews/${Date.now()}_${file.name}`
+  const storageRef = ref(storage, filePath)
+  const uploadTask = uploadBytesResumable(storageRef, file)
+
+  return new Promise((resolve, reject) => {
+    uploadTask.on(
+      'state_changed',
+      null,
+      (error) => reject(error),
+      async () => {
+        const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
+        resolve(downloadURL)
+      }
+    )
+  })
+}
+
 export async function uploadProfilePhoto(userId, file, onProgress) {
   const filePath = `${userId}/profile/photo.jpg`
   const storageRef = ref(storage, filePath)
