@@ -113,16 +113,21 @@ class FolderPersonal {
         }
 
         try {
+            const { linkWithCredential, EmailAuthProvider } = window.firebase_auth_fns;
             errorElement.textContent = '';
-            // Primero, intenta iniciar sesión normalmente
-            const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
 
-            // Si hay un usuario anónimo activo, intenta vincularlo
-            if (this.auth.currentUser && this.auth.currentUser.isAnonymous) {
-                const { linkWithCredential, EmailAuthProvider } = window.firebase_auth_fns;
+            // 1. Capturamos al usuario actual. Si es anónimo, lo usamos para vincular.
+            const currentUser = this.auth.currentUser;
+
+            if (currentUser && currentUser.isAnonymous) {
+                // 2. Creamos la credencial para la cuenta permanente.
                 const credential = EmailAuthProvider.credential(email, password);
-                await linkWithCredential(this.auth.currentUser, credential);
+                // 3. Vinculamos la cuenta anónima actual con la nueva credencial.
+                await linkWithCredential(currentUser, credential);
                 console.log('✓ Cuenta anónima vinculada exitosamente a', email);
+            } else {
+                // Si no hay usuario anónimo, simplemente iniciamos sesión.
+                await signInWithEmailAndPassword(this.auth, email, password);
             }
         } catch (error) {
             console.error('Error de inicio de sesión:', error.code);
