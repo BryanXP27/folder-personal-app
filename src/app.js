@@ -11,7 +11,6 @@ import {
   saveProfile,
 } from './firestore.js'
 import { uploadFile, deleteStorageFile, uploadProfilePhoto } from './storage.js'
-import { testFirebaseConnection } from './firebase.js'
 import {
   showNotification,
   closeModal,
@@ -77,15 +76,7 @@ class FolderPersonal {
     this.loadData()
     this.showProfileView()
     this.loadProfile()
-    testFirebaseConnection().then((res) => {
-      console.log('[App] Firebase:', res)
-      if (!res.storage) {
-        showNotification(
-          'Storage no accesible. Habilitalo en Firebase Console.',
-          'error'
-        )
-      }
-    })
+    console.log('[App] Usando Cloudinary como almacenamiento')
   }
 
   showProfileView() {
