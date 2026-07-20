@@ -41,12 +41,12 @@
             </div>
 
             <nav class="sidebar-nav">
-                <button class="nav-item active" data-filter="all">
+                <button class="nav-item active" data-filter="profile">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
-                        <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path>
-                        <polyline points="9 22 9 12 15 12 15 22"></polyline>
+                        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                        <circle cx="12" cy="7" r="4"></circle>
                     </svg>
-                    <span>Todos</span>
+                    <span>Perfil</span>
                 </button>
                 <button class="nav-item" data-filter="document">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -75,7 +75,7 @@
                         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                     </svg>
-                    <span>Enlaces</span>
+                    <span>Enlaces de logros</span>
                 </button>
             </nav>
 
@@ -94,7 +94,7 @@
             <!-- Header -->
             <header class="header">
                 <div class="header-left">
-                    <h2 id="pageTitle">Todos los archivos</h2>
+                    <h2 id="pageTitle">Perfil del Usuario</h2>
                     <p class="items-count" id="itemsCount">0 elementos</p>
                 </div>
                 <div class="header-right">
@@ -117,6 +117,38 @@
 
             <!-- Grid of Items -->
             <div class="items-grid" id="itemsGrid">
+                <!-- Items será generados por JavaScript -->
+            </div>
+
+            <!-- Profile View -->
+            <div class="profile-view" id="profileView">
+                <div class="profile-card">
+                    <div class="profile-header">
+                        <img src="https://i.pravatar.cc/150?u=brayan@undc.edu.pe" alt="Avatar" class="profile-avatar">
+                        <div class="profile-title">
+                            <h3 id="profileName">Nombre Apellido</h3>
+                            <p id="profileCareer">Carrera Profesional</p>
+                        </div>
+                        <button class="btn-secondary" id="btnEditProfile">Editar Perfil</button>
+                    </div>
+                    <div class="profile-details">
+                        <div class="detail-item">
+                            <span class="detail-label">Correo Institucional</span>
+                            <span class="detail-value" id="profileEmail">cargando...</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Número de Teléfono</span>
+                            <span class="detail-value" id="profilePhone">No especificado</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Ciclo Actual</span>
+                            <span class="detail-value" id="profileCycle">No especificado</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Curso Favorito</span>
+                            <span class="detail-value" id="profileCourse">No especificado</span>
+                        </div>
+                    </div>
                 <!-- Items será generados por JavaScript -->
             </div>
 

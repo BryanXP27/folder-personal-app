@@ -60,6 +60,7 @@ class FolderPersonal {
                 this.applyTheme();
                 this.loadItemsFromFirestore();
                 document.getElementById('userEmail').textContent = user.email;
+                document.getElementById('profileEmail').textContent = user.email;
 
             } else {
                 // Usuario ha cerrado sesión
@@ -251,19 +252,33 @@ class FolderPersonal {
             document.querySelectorAll('.nav-item').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
             this.currentFilter = btn.dataset.filter;
-            
+
+            const pageTitle = document.getElementById('pageTitle');
+            const itemsGrid = document.getElementById('itemsGrid');
+            const profileView = document.getElementById('profileView');
+            const itemsCount = document.getElementById('itemsCount');
+
             const titles = {
-                'all': 'Todos los archivos',
+                'profile': 'Perfil del Usuario',
                 'document': 'Documentos',
                 'image': 'Imágenes',
                 'video': 'Videos',
-                'link': 'Enlaces'
+                'link': 'Enlaces de logros'
             };
-            const pageTitle = document.getElementById('pageTitle');
-            if (pageTitle) {
-                pageTitle.textContent = titles[this.currentFilter] || 'Archivos';
+
+            if (pageTitle) pageTitle.textContent = titles[this.currentFilter] || 'Archivos';
+
+            if (this.currentFilter === 'profile') {
+                itemsGrid.style.display = 'none';
+                profileView.style.display = 'block';
+                itemsCount.style.display = 'none';
+            } else {
+                itemsGrid.style.display = 'grid';
+                profileView.style.display = 'none';
+                itemsCount.style.display = 'block';
+                // Forzamos un render para aplicar el filtro
+                this.render();
             }
-            this.render();
         } catch (error) {
             console.error('Error en filterItems:', error);
         }
@@ -656,7 +671,13 @@ class FolderPersonal {
 
     render() {
         try {
-            const filtered = this.currentFilter === 'all' ? this.items : this.items.filter(item => item.type === this.currentFilter);
+            // Si el filtro es 'profile', no renderizamos la grid.
+            if (this.currentFilter === 'profile') {
+                document.getElementById('itemsGrid').style.display = 'none';
+                document.getElementById('profileView').style.display = 'block';
+                return;
+            }
+            const filtered = this.items.filter(item => item.type === this.currentFilter);
             this.renderItems(filtered);
         } catch (error) {
             console.error('Error en render:', error);

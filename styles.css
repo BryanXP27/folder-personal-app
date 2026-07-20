@@ -268,6 +268,7 @@ body {
 .items-grid {
     flex: 1;
     overflow-y: auto;
+    display: none; /* Oculto por defecto, se muestra con JS */
     padding: 24px 32px;
     display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
@@ -770,6 +771,82 @@ body {
     transition: width 0.3s ease;
 }
 
+/* ========== PROFILE VIEW ========== */
+.profile-view {
+    flex: 1;
+    overflow-y: auto;
+    padding: 32px;
+}
+
+.profile-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: var(--radius);
+    padding: 32px;
+    max-width: 900px;
+    margin: 0 auto;
+    box-shadow: var(--shadow);
+}
+
+.profile-header {
+    display: flex;
+    align-items: center;
+    gap: 24px;
+    padding-bottom: 24px;
+    margin-bottom: 24px;
+    border-bottom: 1px solid var(--border);
+}
+
+.profile-avatar {
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    border: 3px solid var(--primary);
+    object-fit: cover;
+}
+
+.profile-title h3 {
+    font-size: 24px;
+    font-weight: 700;
+    margin-bottom: 4px;
+}
+
+.profile-title p {
+    font-size: 16px;
+    color: var(--text-secondary);
+}
+
+.profile-header button {
+    margin-left: auto;
+}
+
+.profile-details {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 24px;
+}
+
+.detail-item {
+    background: var(--surface-light);
+    padding: 16px;
+    border-radius: 8px;
+    border: 1px solid var(--border);
+}
+
+.detail-label {
+    display: block;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--text-secondary);
+    text-transform: uppercase;
+    margin-bottom: 8px;
+}
+
+.detail-value {
+    font-size: 16px;
+    font-weight: 500;
+    color: var(--text);
+}
 /* ========== LOGIN SCREEN ========== */
 .login-container {
     display: flex;
