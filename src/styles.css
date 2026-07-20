@@ -268,9 +268,8 @@ body {
 .items-grid {
     flex: 1;
     overflow-y: auto;
-    display: none; /* Oculto por defecto, se muestra con JS */
+    display: none;
     padding: 24px 32px;
-    display: grid;
     grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
     gap: 20px;
 }

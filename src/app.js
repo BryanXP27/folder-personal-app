@@ -510,6 +510,10 @@ class FolderPersonal {
         folderId: this.currentFolderId,
       })
       showNotification(`${file.name} subido correctamente`, 'success')
+      if (this.currentFilter === 'profile') {
+        const btn = document.querySelector(`[data-filter="${type}"]`)
+        if (btn) this.filterItems(btn)
+      }
     } catch {
       showNotification(`Error al subir ${file.name}`, 'error')
     }
@@ -538,6 +542,10 @@ class FolderPersonal {
         folderId: this.currentFolderId,
       })
       showNotification('Enlace agregado', 'success')
+      if (this.currentFilter === 'profile') {
+        const btn = document.querySelector('[data-filter="link"]')
+        if (btn) this.filterItems(btn)
+      }
       if (linkInput) linkInput.value = ''
       if (linkTitleInput) linkTitleInput.value = ''
     } catch {
