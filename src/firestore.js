@@ -9,6 +9,8 @@ import {
   orderBy,
   where,
   serverTimestamp,
+  setDoc,
+  getDoc,
 } from 'firebase/firestore'
 import { db } from './firebase.js'
 
@@ -26,6 +28,10 @@ function itemDoc(userId, itemId) {
 
 function folderDoc(userId, folderId) {
   return doc(db, 'users', userId, 'folders', folderId)
+}
+
+function profileDoc(userId) {
+  return doc(db, 'users', userId, 'profile', 'main')
 }
 
 export function subscribeItems(userId, onData, onError) {
@@ -71,6 +77,21 @@ export async function moveItemsToFolder(userId, itemIds, folderId) {
     updateDoc(itemDoc(userId, id), { folderId })
   )
   return Promise.all(promises)
+}
+
+export async function getProfile(userId) {
+  const snap = await getDoc(profileDoc(userId))
+  return snap.exists() ? snap.data() : null
+}
+
+export function subscribeProfile(userId, onData) {
+  return onSnapshot(profileDoc(userId), (snap) => {
+    onData(snap.exists() ? snap.data() : null)
+  })
+}
+
+export async function saveProfile(userId, data) {
+  return setDoc(profileDoc(userId), data, { merge: true })
 }
 
 export async function getItemsInFolder(userId, folderId) {

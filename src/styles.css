@@ -1246,6 +1246,25 @@ body {
     color: var(--accent);
 }
 
+/* ========== EDIT PROFILE MODAL ========== */
+.profile-photo-upload {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    padding: 16px;
+    background: var(--surface-light);
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+}
+
+.edit-photo-preview {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    object-fit: cover;
+    border: 3px solid var(--primary);
+}
+
 /* ========== RESPONSIVE FIXES ========== */
 @media (max-width: 768px) {
     .sidebar-section {

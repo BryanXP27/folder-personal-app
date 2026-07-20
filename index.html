@@ -132,7 +132,7 @@
             <div class="profile-view" id="profileView">
                 <div class="profile-card">
                     <div class="profile-header">
-                        <img src="https://i.pravatar.cc/150?u=brayan@undc.edu.pe" alt="Avatar" class="profile-avatar">
+                        <img src="https://i.pravatar.cc/150?u=brayan@undc.edu.pe" alt="Avatar" class="profile-avatar" id="profileAvatar">
                         <div class="profile-title">
                             <h3 id="profileName">Nombre Apellido</h3>
                             <p id="profileCareer">Carrera Profesional</p>
@@ -331,6 +331,50 @@
                         Organización por carpetas 📂
                     </p>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Perfil -->
+    <div class="modal" id="editProfileModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3>Editar Perfil</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label>Foto de perfil</label>
+                    <div class="profile-photo-upload">
+                        <img src="https://i.pravatar.cc/150" alt="Foto" class="edit-photo-preview" id="editProfilePhoto">
+                        <input type="file" id="profilePhotoInput" accept="image/*" hidden>
+                        <button class="btn-secondary" type="button" id="btnChangePhoto">Cambiar foto</button>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label for="editName">Nombre completo</label>
+                    <input type="text" id="editName" placeholder="Tu nombre completo">
+                </div>
+                <div class="form-group">
+                    <label for="editCareer">Carrera / Profesión</label>
+                    <input type="text" id="editCareer" placeholder="Tu carrera o profesión">
+                </div>
+                <div class="form-group">
+                    <label for="editPhone">Teléfono</label>
+                    <input type="text" id="editPhone" placeholder="Número de teléfono">
+                </div>
+                <div class="form-group">
+                    <label for="editCycle">Ciclo / Semestre</label>
+                    <input type="text" id="editCycle" placeholder="Ciclo actual">
+                </div>
+                <div class="form-group">
+                    <label for="editCourse">Curso favorito</label>
+                    <input type="text" id="editCourse" placeholder="Tu curso favorito">
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="btnCancelEdit">Cancelar</button>
+                <button class="btn-primary" id="btnSaveProfile">Guardar</button>
             </div>
         </div>
     </div>

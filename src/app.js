@@ -2,13 +2,15 @@ import { onAuth, login, logout, getUser } from './auth.js'
 import {
   subscribeItems,
   subscribeFolders,
+  subscribeProfile,
   addItem,
   deleteItem,
   addFolder,
   removeFolder,
   updateItem,
+  saveProfile,
 } from './firestore.js'
-import { uploadFile, deleteStorageFile } from './storage.js'
+import { uploadFile, deleteStorageFile, uploadProfilePhoto } from './storage.js'
 import {
   showNotification,
   closeModal,
@@ -23,13 +25,16 @@ class FolderPersonal {
   constructor() {
     this.items = []
     this.folders = []
+    this.profileData = null
     this.currentFilter = 'profile'
     this.currentFolderId = null
     this.selectedItem = null
     this.searchQuery = ''
     this.unsubscribeItems = null
     this.unsubscribeFolders = null
+    this.unsubscribeProfile = null
     this.onConfirm = null
+    this.pendingPhotoURL = null
 
     onAuth((user) => {
       const loginEl = document.getElementById('loginContainer')
@@ -44,6 +49,7 @@ class FolderPersonal {
         this.userId = null
         if (this.unsubscribeItems) this.unsubscribeItems()
         if (this.unsubscribeFolders) this.unsubscribeFolders()
+        if (this.unsubscribeProfile) this.unsubscribeProfile()
         this.items = []
         this.folders = []
         loginEl.classList.remove('hidden')
@@ -60,6 +66,19 @@ class FolderPersonal {
     applyTheme(getSavedTheme())
     this.setupAppListeners()
     this.loadData()
+    this.showProfileView()
+    this.loadProfile()
+  }
+
+  showProfileView() {
+    this.currentFilter = 'profile'
+    document.getElementById('itemsGrid').style.display = 'none'
+    document.getElementById('profileView').style.display = 'block'
+    document.getElementById('pageTitle').textContent = 'Perfil del Usuario'
+    document.getElementById('itemsCount').style.display = 'none'
+    document.querySelectorAll('.nav-item').forEach((b) => b.classList.remove('active'))
+    const profileBtn = document.querySelector('[data-filter="profile"]')
+    if (profileBtn) profileBtn.classList.add('active')
   }
 
   loadData() {
@@ -84,6 +103,35 @@ class FolderPersonal {
       },
       (err) => console.error('Error loading folders:', err)
     )
+  }
+
+  loadProfile() {
+    this.unsubscribeProfile = subscribeProfile(this.userId, (data) => {
+      this.profileData = data || {}
+      this.renderProfile()
+    })
+  }
+
+  renderProfile() {
+    const d = this.profileData || {}
+    const setText = (id, fallback) => {
+      const el = document.getElementById(id)
+      if (el) el.textContent = d[id.replace('profile', '').toLowerCase()] || fallback
+    }
+
+    document.getElementById('profileName').textContent = d.name || 'Nombre Apellido'
+    document.getElementById('profileCareer').textContent = d.career || 'Carrera Profesional'
+    document.getElementById('profileEmail').textContent = getUser()?.email || 'cargando...'
+    document.getElementById('profilePhone').textContent = d.phone || 'No especificado'
+    document.getElementById('profileCycle').textContent = d.cycle || 'No especificado'
+    document.getElementById('profileCourse').textContent = d.course || 'No especificado'
+
+    const avatar = document.getElementById('profileAvatar')
+    if (d.photoURL) {
+      avatar.src = d.photoURL
+    } else {
+      avatar.src = `https://i.pravatar.cc/150?u=${this.userId}`
+    }
   }
 
   setupLoginListeners() {
@@ -181,6 +229,18 @@ class FolderPersonal {
         if (e.target === modal) closeModal(modal)
       })
     })
+
+    document.getElementById('btnEditProfile')?.addEventListener('click', () => this.openEditProfile())
+    document.getElementById('btnSaveProfile')?.addEventListener('click', () => this.saveProfileData())
+    document.getElementById('btnCancelEdit')?.addEventListener('click', () => {
+      closeModal(document.getElementById('editProfileModal'))
+    })
+    document.getElementById('btnChangePhoto')?.addEventListener('click', () => {
+      document.getElementById('profilePhotoInput')?.click()
+    })
+    document.getElementById('profilePhotoInput')?.addEventListener('change', (e) => {
+      if (e.target.files.length) this.handleProfilePhoto(e.target.files[0])
+    })
   }
 
   filterItems(btn) {
@@ -200,9 +260,11 @@ class FolderPersonal {
     if (this.currentFilter === 'profile') {
       document.getElementById('itemsGrid').style.display = 'none'
       document.getElementById('profileView').style.display = 'block'
+      document.getElementById('itemsCount').style.display = 'none'
     } else {
       document.getElementById('itemsGrid').style.display = 'grid'
       document.getElementById('profileView').style.display = 'none'
+      document.getElementById('itemsCount').style.display = 'block'
       this.render()
     }
   }
@@ -281,10 +343,12 @@ class FolderPersonal {
     if (this.currentFilter === 'profile') {
       document.getElementById('itemsGrid').style.display = 'none'
       document.getElementById('profileView').style.display = 'block'
+      document.getElementById('itemsCount').style.display = 'none'
       return
     }
     document.getElementById('itemsGrid').style.display = 'grid'
     document.getElementById('profileView').style.display = 'none'
+    document.getElementById('itemsCount').style.display = 'block'
 
     const currentFolders = this.folders.filter(
       (f) => f.parentId === this.currentFolderId
@@ -591,6 +655,62 @@ class FolderPersonal {
   updateStorageIndicator() {
     const el = document.getElementById('storageText')
     if (el) el.textContent = `Conectado a la nube. ${this.items.length} elementos.`
+  }
+
+  openEditProfile() {
+    const d = this.profileData || {}
+    document.getElementById('editName').value = d.name || ''
+    document.getElementById('editCareer').value = d.career || ''
+    document.getElementById('editPhone').value = d.phone || ''
+    document.getElementById('editCycle').value = d.cycle || ''
+    document.getElementById('editCourse').value = d.course || ''
+
+    const preview = document.getElementById('editProfilePhoto')
+    preview.src = d.photoURL || `https://i.pravatar.cc/150?u=${this.userId}`
+
+    this.pendingPhotoURL = null
+    openModal(document.getElementById('editProfileModal'))
+  }
+
+  async saveProfileData() {
+    const data = {
+      name: document.getElementById('editName').value.trim(),
+      career: document.getElementById('editCareer').value.trim(),
+      phone: document.getElementById('editPhone').value.trim(),
+      cycle: document.getElementById('editCycle').value.trim(),
+      course: document.getElementById('editCourse').value.trim(),
+    }
+
+    if (this.pendingPhotoURL) {
+      data.photoURL = this.pendingPhotoURL
+    } else if (this.profileData?.photoURL) {
+      data.photoURL = this.profileData.photoURL
+    }
+
+    try {
+      await saveProfile(this.userId, data)
+      showNotification('Perfil actualizado', 'success')
+      closeModal(document.getElementById('editProfileModal'))
+    } catch {
+      showNotification('Error al guardar perfil', 'error')
+    }
+  }
+
+  async handleProfilePhoto(file) {
+    if (!file) return
+    if (!file.type.startsWith('image/')) {
+      showNotification('Solo se aceptan imágenes', 'error')
+      return
+    }
+    showNotification('Subiendo foto...', 'info')
+    try {
+      const url = await uploadProfilePhoto(this.userId, file)
+      this.pendingPhotoURL = url
+      document.getElementById('editProfilePhoto').src = url
+      showNotification('Foto lista. Guarda el perfil para confirmar.', 'success')
+    } catch {
+      showNotification('Error al subir foto', 'error')
+    }
   }
 }
 
