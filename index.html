@@ -204,6 +204,10 @@
                             <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                         </div>
                     </div>
+                    <div class="form-group" style="margin-top:16px">
+                        <label for="previewUrl">URL de imagen de vista previa (opcional):</label>
+                        <input type="url" id="previewUrl" placeholder="https://ejemplo.com/imagen.jpg">
+                    </div>
                     <div class="upload-info">
                         <p><strong>Formatos soportados:</strong></p>
                         <ul>
@@ -224,6 +228,10 @@
                     <div class="form-group">
                         <label for="linkTitle">Título (opcional):</label>
                         <input type="text" id="linkTitle" placeholder="Mi enlace favorito">
+                    </div>
+                    <div class="form-group">
+                        <label for="linkPreviewUrl">URL de imagen personalizada (opcional):</label>
+                        <input type="url" id="linkPreviewUrl" placeholder="https://ejemplo.com/imagen.jpg">
                     </div>
                     <button class="btn-primary" id="btnAddLink">Agregar enlace</button>
                 </div>
@@ -254,6 +262,13 @@
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     </svg>
                     Eliminar
+                </button>
+                <button class="btn-secondary" id="btnEditItem" style="display:none;">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16">
+                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                    </svg>
+                    Editar
                 </button>
             </div>
         </div>
@@ -376,6 +391,31 @@
             <div class="modal-footer">
                 <button class="btn-secondary" id="btnCancelEdit">Cancelar</button>
                 <button class="btn-primary" id="btnSaveProfile">Guardar</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal Editar Item -->
+    <div class="modal" id="editItemModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 id="editItemTitle">Editar</h3>
+                <button class="modal-close">&times;</button>
+            </div>
+            <div class="modal-body">
+                <div class="form-group">
+                    <label for="editItemName">Nombre:</label>
+                    <input type="text" id="editItemName" placeholder="Nombre del archivo">
+                </div>
+                <div class="form-group">
+                    <label for="editItemPreview">URL de imagen de vista previa:</label>
+                    <input type="url" id="editItemPreview" placeholder="https://ejemplo.com/imagen.jpg">
+                </div>
+                <img id="editItemPreviewImg" style="max-width:200px;max-height:150px;border-radius:8px;display:none;margin-top:8px">
+            </div>
+            <div class="modal-footer">
+                <button class="btn-secondary" id="btnCancelEditItem">Cancelar</button>
+                <button class="btn-primary" id="btnSaveEditItem">Guardar</button>
             </div>
         </div>
     </div>

@@ -215,6 +215,11 @@ class FolderPersonal {
 
     document.getElementById('btnDelete')?.addEventListener('click', () => this.confirmDelete())
     document.getElementById('btnDownload')?.addEventListener('click', () => this.downloadItem())
+    document.getElementById('btnEditItem')?.addEventListener('click', () => this.openEditItem())
+    document.getElementById('btnSaveEditItem')?.addEventListener('click', () => this.saveEditItem())
+    document.getElementById('btnCancelEditItem')?.addEventListener('click', () => {
+      closeModal(document.getElementById('editItemModal'))
+    })
     document.getElementById('btnConfirmDelete')?.addEventListener('click', () => {
       if (this.onConfirm) this.onConfirm()
     })
@@ -249,6 +254,16 @@ class FolderPersonal {
     })
     document.getElementById('btnChangePhoto')?.addEventListener('click', () => {
       document.getElementById('profilePhotoInput')?.click()
+    })
+    document.getElementById('editItemPreview')?.addEventListener('input', (e) => {
+      const img = document.getElementById('editItemPreviewImg')
+      const val = e.target.value.trim()
+      if (val) {
+        img.src = val
+        img.style.display = 'block'
+      } else {
+        img.style.display = 'none'
+      }
     })
     document.getElementById('profilePhotoInput')?.addEventListener('change', (e) => {
       if (e.target.files.length) this.handleProfilePhoto(e.target.files[0])
@@ -430,14 +445,15 @@ class FolderPersonal {
 
   itemCard(item) {
     let preview = ''
-    if (item.type === 'image') {
+    const itemPreview = item.preview || (item.type === 'link' ? item.image : null)
+    if (itemPreview) {
+      preview = `<img src="${itemPreview}" alt="${item.name}" loading="lazy" style="object-fit:cover" onerror="this.style.display='none'">`
+    } else if (item.type === 'image') {
       preview = `<img src="${item.url}" alt="${item.name}" loading="lazy" onerror="this.style.display='none'">`
     } else if (item.type === 'video') {
       preview = `<video><source src="${item.url}"></video>`
     } else if (item.type === 'link') {
-      preview = item.image
-        ? `<img src="${item.image}" alt="${item.name}" style="object-fit:cover" onerror="this.style.display='none'">`
-        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
+      preview = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
     } else {
       preview = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
     }
@@ -461,8 +477,11 @@ class FolderPersonal {
     const title = document.getElementById('viewModalTitle')
     const body = document.getElementById('viewModalBody')
     const btnDownload = document.getElementById('btnDownload')
+    const btnEdit = document.getElementById('btnEditItem')
     title.textContent = this.selectedItem.name
     document.getElementById('btnDelete').style.display = 'inline-block'
+
+    const itemPreview = this.selectedItem.preview || (this.selectedItem.type === 'link' ? this.selectedItem.image : null)
 
     if (this.selectedItem.type === 'image') {
       body.innerHTML = `<div class="view-image"><img src="${this.selectedItem.url}" alt="${this.selectedItem.name}"></div>`
@@ -472,8 +491,8 @@ class FolderPersonal {
       btnDownload.style.display = 'inline-block'
     } else if (this.selectedItem.type === 'link') {
       body.innerHTML = `<div class="link-preview">${
-        this.selectedItem.image
-          ? `<img src="${this.selectedItem.image}" class="link-preview-img" onerror="this.style.display='none'">`
+        itemPreview
+          ? `<img src="${itemPreview}" class="link-preview-img" onerror="this.style.display='none'">`
           : ''
       }<div class="link-preview-content"><div class="link-preview-title">${
         this.selectedItem.name
@@ -484,9 +503,13 @@ class FolderPersonal {
       }</a></div></div>`
       btnDownload.style.display = 'inline-block'
     } else {
-      body.innerHTML = `<div class="view-document"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>${this.selectedItem.name}</p><p style="font-size:12px;color:var(--text-secondary)">${this.selectedItem.size}</p></div>`
+      const docPreview = itemPreview
+        ? `<img src="${itemPreview}" style="max-width:100%;max-height:300px;object-fit:contain;border-radius:8px" onerror="this.style.display='none'">`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="64" height="64"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
+      body.innerHTML = `<div class="view-document">${docPreview}<p style="margin-top:12px">${this.selectedItem.name}</p><p style="font-size:12px;color:var(--text-secondary)">${this.selectedItem.size}</p></div>`
       btnDownload.style.display = 'inline-block'
     }
+    btnEdit.style.display = 'inline-block'
     openModal(modal)
   }
 
@@ -497,6 +520,8 @@ class FolderPersonal {
       console.error('[Upload] this.userId es null/undefined')
       return
     }
+    const previewUrl = document.getElementById('previewUrl')?.value.trim() || null
+    document.getElementById('previewUrl').value = ''
     closeModal(document.getElementById('addModal'))
     for (const file of files) {
       const type = getFileType(file.type, file.name)
@@ -504,11 +529,11 @@ class FolderPersonal {
         showNotification(`Tipo no soportado: ${file.name}`, 'error')
         continue
       }
-      this.uploadAndSave(file, type)
+      this.uploadAndSave(file, type, previewUrl)
     }
   }
 
-  async uploadAndSave(file, type) {
+  async uploadAndSave(file, type, previewUrl) {
     const progressText = document.getElementById('progressText')
     const progressFill = document.getElementById('progressFill')
     const progressDiv = document.getElementById('uploadProgress')
@@ -518,24 +543,22 @@ class FolderPersonal {
         if (progressText) progressText.textContent = `Subiendo ${file.name}... ${Math.round(p)}%`
         if (progressFill) progressFill.style.width = `${p}%`
       })
-      const docRef = await addItem(this.userId, {
+      const itemData = {
         name: file.name,
         type,
         size: formatFileSize(file.size),
         url: downloadURL,
         path: filePath,
         folderId: this.currentFolderId,
-      })
-      this.items.unshift({
+      }
+      if (previewUrl) itemData.preview = previewUrl
+      const docRef = await addItem(this.userId, itemData)
+      const newItem = {
         id: docRef.id,
-        name: file.name,
-        type,
-        size: formatFileSize(file.size),
-        url: downloadURL,
-        path: filePath,
-        folderId: this.currentFolderId,
+        ...itemData,
         createdAt: new Date(),
-      })
+      }
+      this.items.unshift(newItem)
       showNotification(`${file.name} subido correctamente`, 'success')
       if (this.currentFilter === 'profile') {
         const btn = document.querySelector(`[data-filter="${type}"]`)
@@ -572,26 +595,23 @@ class FolderPersonal {
       console.error('[AddLink] this.userId es null')
       return
     }
+    const manualPreview = document.getElementById('linkPreviewUrl')?.value.trim() || null
     showNotification('Obteniendo vista previa...', 'info')
     closeModal(document.getElementById('addModal'))
     const ogData = await this.getOpenGraphData(url)
     try {
-      const docRef = await addItem(this.userId, {
+      const linkData = {
         name: customTitle || ogData.title || url,
         type: 'link',
         url,
-        image: ogData.image || null,
         description: ogData.description || null,
         folderId: this.currentFolderId,
-      })
+        image: manualPreview || ogData.image || null,
+      }
+      const docRef = await addItem(this.userId, linkData)
       this.items.unshift({
         id: docRef.id,
-        name: customTitle || ogData.title || url,
-        type: 'link',
-        url,
-        image: ogData.image || null,
-        description: ogData.description || null,
-        folderId: this.currentFolderId,
+        ...linkData,
         createdAt: new Date(),
       })
       showNotification('Enlace agregado', 'success')
@@ -603,6 +623,7 @@ class FolderPersonal {
       }
       if (linkInput) linkInput.value = ''
       if (linkTitleInput) linkTitleInput.value = ''
+      document.getElementById('linkPreviewUrl').value = ''
     } catch {
       showNotification('Error al agregar enlace', 'error')
     }
@@ -773,6 +794,48 @@ class FolderPersonal {
       closeModal(document.getElementById('editProfileModal'))
     } catch {
       showNotification('Error al guardar perfil', 'error')
+    }
+  }
+
+  openEditItem() {
+    if (!this.selectedItem) return
+    document.getElementById('editItemTitle').textContent = `Editar: ${this.selectedItem.name}`
+    document.getElementById('editItemName').value = this.selectedItem.name
+    const previewVal = this.selectedItem.preview || (this.selectedItem.type === 'link' ? this.selectedItem.image : '') || ''
+    document.getElementById('editItemPreview').value = previewVal
+    const img = document.getElementById('editItemPreviewImg')
+    if (previewVal) {
+      img.src = previewVal
+      img.style.display = 'block'
+    } else {
+      img.style.display = 'none'
+    }
+    closeModal(document.getElementById('viewModal'))
+    openModal(document.getElementById('editItemModal'))
+  }
+
+  async saveEditItem() {
+    if (!this.selectedItem) return
+    const newName = document.getElementById('editItemName').value.trim()
+    const newPreview = document.getElementById('editItemPreview').value.trim() || null
+    if (!newName) {
+      showNotification('El nombre no puede estar vacio', 'error')
+      return
+    }
+    try {
+      await updateItem(this.userId, this.selectedItem.id, { name: newName, preview: newPreview })
+      this.selectedItem.name = newName
+      this.selectedItem.preview = newPreview
+      const item = this.items.find((i) => i.id === this.selectedItem.id)
+      if (item) {
+        item.name = newName
+        item.preview = newPreview
+      }
+      showNotification('Actualizado', 'success')
+      closeModal(document.getElementById('editItemModal'))
+      this.render()
+    } catch {
+      showNotification('Error al actualizar', 'error')
     }
   }
 
