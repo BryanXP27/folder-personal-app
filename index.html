@@ -272,42 +272,33 @@
     <div class="notifications" id="notifications"></div>
 
     <!-- Firebase SDK v9+ (Modular SDK) -->
-    <script type="module" id="firebase-init">
+    <script type="module">
         // Importar funciones necesarias de los SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
         import { getAuth, signInAnonymously } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
         import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
-        // Reemplaza esto con tu configuración real de Firebase
-        // ¡IMPORTANTE! Mueve esto a un archivo config.js y añádelo a .gitignore
-        // Por ahora, lo dejamos aquí para que funcione directamente.
-        // En el siguiente paso lo moveremos.
-    </script>
-    <script type="module">
         // Configuración de Firebase. Es seguro tenerla aquí.
         // La seguridad la proporcionan las reglas de Firestore/Storage.
         const firebaseConfig = {
-            apiKey: "AIzaSyDLo0gEJ7lsDb2q_njoQbx25zDIC55gb4o",
-            authDomain: "folder-personal-app.firebaseapp.com",
-            projectId: "folder-personal-app",
-            storageBucket: "folder-personal-app.appspot.com",
-            messagingSenderId: "407583616863",
-            appId: "1:407583616863:web:739d8d393b296b499a10ea",
-            measurementId: "G-22P5C7P982"
+             apiKey: "AIzaSyDLo0gEJ7lsDb2q_njoQbx25zDIC55gb4o",
+             authDomain: "folder-personal-app.firebaseapp.com",
+             projectId: "folder-personal-app",
+             storageBucket: "folder-personal-app.appspot.com",
+             messagingSenderId: "407583616863",
+             appId: "1:407583616863:web:739d8d393b296b499a10ea",
+             measurementId: "G-22P5C7P982"
         };
 
         try {
             // Inicializar Firebase
             const app = initializeApp(firebaseConfig);
-            const auth = getAuth(app);
-            const storage = getStorage(app);
-            const db = getFirestore(app);
 
             // Hacer disponibles globalmente para script.js
-            window.firebaseAuth = auth;
-            window.firebaseStorage = storage;
-            window.firebaseDb = db;
+            window.firebaseAuth = getAuth(app);
+            window.firebaseStorage = getStorage(app);
+            window.firebaseDb = getFirestore(app);
             window.signInAnonymously = signInAnonymously;
 
             // Exponer funciones específicas para que script.js las use
@@ -322,6 +313,7 @@
             document.body.innerHTML = `<div style="padding: 40px; text-align: center; color: red;"><h2>Error de Configuración</h2><p>No se pudo conectar a Firebase. Revisa tu archivo de configuración y la consola para más detalles.</p></div>`;
         }
     </script>
+
     <!-- Script de la aplicación -->
     <script src="script.js"></script>
 </body>
