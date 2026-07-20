@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Folder Personal - Gestor de Archivos Cloud</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
     <!-- Login Screen -->
@@ -38,6 +38,15 @@
                     <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
                 </svg>
                 <h1>Folder Personal</h1>
+            </div>
+
+            <!-- Folder Tree -->
+            <div class="sidebar-section">
+                <div class="sidebar-section-header">
+                    <span>Carpetas</span>
+                    <button class="btn-folder-add" id="btnNewFolder" title="Nueva carpeta">+</button>
+                </div>
+                <div class="folder-tree" id="folderTree"></div>
             </div>
 
             <nav class="sidebar-nav">
@@ -75,7 +84,7 @@
                         <path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"></path>
                         <path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"></path>
                     </svg>
-                    <span>Enlaces de logros</span>
+                    <span>Enlaces</span>
                 </button>
             </nav>
 
@@ -95,6 +104,7 @@
             <header class="header">
                 <div class="header-left">
                     <h2 id="pageTitle">Perfil del Usuario</h2>
+                    <div class="breadcrumb" id="breadcrumb"></div>
                     <p class="items-count" id="itemsCount">0 elementos</p>
                 </div>
                 <div class="header-right">
@@ -116,9 +126,7 @@
             </header>
 
             <!-- Grid of Items -->
-            <div class="items-grid" id="itemsGrid">
-                <!-- Items será generados por JavaScript -->
-            </div>
+            <div class="items-grid" id="itemsGrid"></div>
 
             <!-- Profile View -->
             <div class="profile-view" id="profileView">
@@ -149,7 +157,7 @@
                             <span class="detail-value" id="profileCourse">No especificado</span>
                         </div>
                     </div>
-                <!-- Items será generados por JavaScript -->
+                </div>
             </div>
 
             <!-- Empty State -->
@@ -229,9 +237,7 @@
                 <h3 id="viewModalTitle"></h3>
                 <button class="modal-close">&times;</button>
             </div>
-            <div class="modal-body" id="viewModalBody">
-                <!-- Content will be generated -->
-            </div>
+            <div class="modal-body" id="viewModalBody"></div>
             <div class="modal-footer">
                 <button class="btn-secondary" id="btnDownload" style="display:none;">
                     <svg viewBox="0 0 24 24" fill="none" stroke="currentColor">
@@ -287,9 +293,7 @@
                 <div class="settings-section">
                     <h4>Cuenta</h4>
                     <p id="userEmail" style="font-size: 14px; color: var(--text-secondary); margin-bottom: 16px;"></p>
-                    <button class="btn-secondary" id="btnLogout">
-                        Cerrar Sesión
-                    </button>
+                    <button class="btn-secondary" id="btnLogout">Cerrar Sesión</button>
                 </div>
                 <div class="settings-section">
                     <h4>Tema</h4>
@@ -318,12 +322,13 @@
                 </div>
                 <div class="settings-section">
                     <h4>Información</h4>
-                    <p><strong>Folder Personal v3.0 - Cloud Edition</strong></p>
+                    <p><strong>Folder Personal v4.0</strong></p>
                     <p>Gestor de archivos con almacenamiento en Firebase Cloud</p>
                     <p style="font-size: 12px; margin-top: 12px; color: var(--text-secondary);">
                         Almacenamiento ilimitado en la nube ☁️<br>
                         Acceso desde cualquier dispositivo 📱<br>
-                        Sincronización automática ✨
+                        Sincronización automática ✨<br>
+                        Organización por carpetas 📂
                     </p>
                 </div>
             </div>
@@ -333,52 +338,7 @@
     <!-- Notificaciones -->
     <div class="notifications" id="notifications"></div>
 
-    <!-- Firebase SDK v9+ (Modular SDK) -->
-    <script type="module">
-        // Importar funciones necesarias de los SDKs
-        import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
-        import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
-        import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
-
-        // Configuración de Firebase. Es seguro tenerla aquí.
-        // La seguridad la proporcionan las reglas de Firestore/Storage.
-        const firebaseConfig = {
-             apiKey: "AIzaSyDLo0gEJ7lsDb2q_njoQbx25zDIC55gb4o",
-             authDomain: "folder-personal-app.firebaseapp.com",
-             projectId: "folder-personal-app",
-             storageBucket: "folder-personal-app.appspot.com",
-             messagingSenderId: "407583616863",
-             appId: "1:407583616863:web:739d8d393b296b499a10ea",
-             measurementId: "G-22P5C7P982"
-        };
-
-        try {
-            // Inicializar Firebase
-            const app = initializeApp(firebaseConfig);
-
-            // Hacer disponibles globalmente para script.js
-            window.firebaseAuth = getAuth(app);
-            window.firebaseStorage = getStorage(app);
-            window.firebaseDb = getFirestore(app);
-            
-            // Exponer las funciones de autenticación que usaremos
-            window.firebase_auth_fns = { signInWithEmailAndPassword, onAuthStateChanged, signOut };
-
-            // Exponer funciones específicas para que script.js las use
-            window.firebase_storage_fns = { ref, uploadBytesResumable, getDownloadURL, deleteObject };
-            window.firebase_firestore_fns = { collection, onSnapshot, addDoc, deleteDoc, doc, query, orderBy, serverTimestamp };
-
-            window.firebaseInitialized = true;
-            console.log('✓ Firebase inicializado correctamente');
-        } catch (error) {
-            console.error("Error al inicializar Firebase:", error);
-            // Muestra un error visual al usuario
-            document.body.innerHTML = `<div style="padding: 40px; text-align: center; color: red;"><h2>Error de Configuración</h2><p>No se pudo conectar a Firebase. Revisa tu archivo de configuración y la consola para más detalles.</p></div>`;
-        }
-    </script>
-
-    <!-- Script de la aplicación -->
-    <script src="script.js"></script>
+    <!-- Entry point Vite -->
+    <script type="module" src="/src/main.js"></script>
 </body>
 </html>
