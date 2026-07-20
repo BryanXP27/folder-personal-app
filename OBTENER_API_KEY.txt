@@ -1,0 +1,163 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║         🔑 OBTENER LA API KEY CORRECTA DE FIREBASE                       ║
+║                                                                            ║
+║     Error: "api-key-not-valid" → Tu API Key es incorrecta                ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+🎯 INSTRUCCIONES PASO A PASO:
+═══════════════════════════════════════════════════════════════════════════════
+
+PASO 1: Abre Firebase Console
+────────────────────────────────
+1. Ve a: https://console.firebase.google.com
+2. Inicia sesión con tu cuenta de Google
+3. Selecciona tu proyecto: "folder-personal-app"
+
+PASO 2: Obtén la configuración
+────────────────────────────────
+1. En el lado izquierdo, haz click en el ícono de configuración ⚙️
+2. Click en "Configuración del proyecto"
+3. Click en la pestaña "General"
+4. Baja hasta encontrar la sección "Tus apps"
+
+PASO 3: Encuentra tu app web
+────────────────────────────────
+Deberías ver algo como esto:
+
+┌─────────────────────────────────────────┐
+│ Tus apps                                │
+│                                         │
+│ 📱 folder-personal-app (Web)           │
+│                                         │
+│ sdkConfig.js - Ver código              │
+└─────────────────────────────────────────┘
+
+Si NO ves una app web, haz click en "Agregar app" → Web
+
+PASO 4: Copia la configuración
+────────────────────────────────
+1. Click en "Ver código" o el ícono de código
+2. Deberías ver algo como esto:
+
+┌─────────────────────────────────────────────────────┐
+│ const firebaseConfig = {                            │
+│   apiKey: "AIzaSyDYqWz0eNKE...",                   │
+│   authDomain: "folder-personal-...",               │
+│   projectId: "folder-personal-app",                │
+│   storageBucket: "folder-personal-...",            │
+│   messagingSenderId: "407583616863",               │
+│   appId: "1:407583616863:web:...",                 │
+│   measurementId: "G-22P5C7P982"                    │
+│ };                                                  │
+└─────────────────────────────────────────────────────┘
+
+3. COPIA TODO esto (selecciona con Ctrl+A, copia con Ctrl+C)
+
+PASO 5: Reemplaza en index.html
+────────────────────────────────
+1. Abre index.html en tu editor
+2. Busca la línea ~240 donde dice:
+
+   const firebaseConfig = {
+       apiKey: "REEMPLAZA_CON_TU_API_KEY",
+
+3. Reemplaza TODA la sección firebaseConfig con lo que copiaste
+
+EJEMPLO:
+┌─────────────────────────────────────────────────────┐
+│ ANTES:                                              │
+│ const firebaseConfig = {                            │
+│     apiKey: "REEMPLAZA_CON_TU_API_KEY",            │
+│     authDomain: "folder-personal-app...",          │
+│     ...                                             │
+│ };                                                  │
+│                                                    │
+│ DESPUÉS:                                            │
+│ const firebaseConfig = {                            │
+│     apiKey: "AIzaSyDYqWz0eNKE1a2b3c4d...",        │
+│     authDomain: "folder-personal-app...",          │
+│     projectId: "folder-personal-app",              │
+│     storageBucket: "folder-personal-app...",       │
+│     messagingSenderId: "407583616863",             │
+│     appId: "1:407583616863:web:739d8d...",        │
+│     measurementId: "G-22P5C7P982"                  │
+│ };                                                  │
+└─────────────────────────────────────────────────────┘
+
+4. Guarda el archivo (Ctrl+S)
+
+PASO 6: Verifica en la consola
+────────────────────────────────
+1. Recarga la página (F5)
+2. Abre la consola (F12)
+3. Deberías ver: "✓ Firebase inicializado correctamente"
+
+Si ves esto → ¡FUNCIONA! ✅
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+⚠️ SI AÚN NO FUNCIONA:
+═══════════════════════════════════════════════════════════════════════════════
+
+ERROR: "auth/api-key-not-valid"
+→ SOLUCIÓN: Verifica que copiaste la API Key EXACTAMENTE como aparece
+  (incluyendo caracteres especiales como guiones)
+
+ERROR: "auth/app-not-authorized"
+→ SOLUCIÓN: El apiKey está correcto pero Firebase no lo autorizó
+  Solución: Ve a Firebase Console → APIs y servicios → Habilita:
+  - Authentication API
+  - Cloud Firestore API
+  - Cloud Storage API
+
+ERROR: No aparece "Tus apps"
+→ SOLUCIÓN: No tienes una app web. Crea una:
+  1. Firebase Console → Agregar app
+  2. Selecciona Web
+  3. Nombre: "folder-personal-web"
+  4. Registrar app
+  5. Copia la configuración
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🔍 VERIFICACIÓN FINAL:
+═══════════════════════════════════════════════════════════════════════════════
+
+Tu configuración debe tener:
+
+✅ apiKey: comienza con "AIzaSy..."
+✅ projectId: es "folder-personal-app"
+✅ storageBucket: contiene "appspot.com"
+✅ appId: empieza con "1:407583616863:web:"
+
+Si TODO coincide → Está correcta ✓
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📱 ACCESO DESDE FIREBASE CONSOLE:
+═══════════════════════════════════════════════════════════════════════════════
+
+Si tienes problemas encontrando la configuración:
+
+1. https://console.firebase.google.com
+2. Tu proyecto: folder-personal-app
+3. Proyecto → Configuración
+4. Desplaza hasta "Tus apps"
+5. Haz click en tu app web
+6. Click en el ícono de configuración ⚙️
+7. Selecciona "Firebase SDK snippet"
+8. Copia TODO el código
+
+¡ESA es la configuración correcta!
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✨ Después de reemplazar la API Key, recarga y ¡funcionará!
+
+═══════════════════════════════════════════════════════════════════════════════

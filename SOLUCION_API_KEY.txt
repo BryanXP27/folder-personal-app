@@ -1,0 +1,65 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║        🔑 SOLUCIÓN RÁPIDA - ERROR DE API KEY EN FIREBASE                 ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+🔴 TU ERROR:
+═══════════════════════════════════════════════════════════════════════════════
+
+Error: Firebase: Error (auth/api-key-not-valid)
+
+SIGNIFICA: Tu API Key no es válida o está incompleta
+
+
+🟢 SOLUCIÓN EN 3 PASOS:
+═══════════════════════════════════════════════════════════════════════════════
+
+PASO 1: Obtén la API Key correcta
+────────────────────────────────────
+Lee: OBTENER_API_KEY.txt
+(Instrucciones paso a paso de dónde copiar la API Key exacta)
+
+PASO 2: Verifica que Storage y Firestore estén habilitados
+────────────────────────────────────────────────────────────
+Lee: HABILITAR_STORAGE_FIRESTORE.txt
+(Instrucciones para habilitar ambos servicios)
+
+PASO 3: Reemplaza en index.html y recarga
+──────────────────────────────────────────
+1. En index.html, línea ~240
+2. Reemplaza la sección firebaseConfig completa
+3. Guarda (Ctrl+S)
+4. Recarga el navegador (F5)
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+⚡ PASOS CRÍTICOS:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. La API Key DEBE comenzar con: "AIzaSy..."
+2. COPIA TODA la configuración desde Firebase Console
+3. NO modifiques nada, solo reemplaza la sección completa
+4. GUARDA el archivo
+5. RECARGA la página
+
+Si ves en la consola:
+"✓ Firebase inicializado correctamente"
+→ ¡FUNCIONA! ✅
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 DOCUMENTOS A LEER EN ORDEN:
+═══════════════════════════════════════════════════════════════════════════════
+
+1. OBTENER_API_KEY.txt .................. ← EMPIEZA AQUÍ
+2. HABILITAR_STORAGE_FIRESTORE.txt .... (después de obtener la key)
+3. Luego abre index.html y reemplaza
+
+═══════════════════════════════════════════════════════════════════════════════
+
+¿LISTO? → Lee OBTENER_API_KEY.txt ahora
+
+═══════════════════════════════════════════════════════════════════════════════

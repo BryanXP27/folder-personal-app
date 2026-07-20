@@ -1,0 +1,197 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║           📖 GUÍA PASO A PASO - CONFIGURAR FIREBASE EN 5 MINUTOS         ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+PASO 1: OBTENER API KEY
+═══════════════════════════════════════════════════════════════════════════════
+
+Tiempo: 1 minuto
+
+1. Abre: https://console.firebase.google.com
+2. Selecciona tu proyecto: "folder-personal-app"
+3. Click en el ícono de configuración (engranaje) 🔧
+4. Click en "Configuración del proyecto"
+5. Copia tu API Key (largo string que empieza con "AIza...")
+6. ¡Guarda en un lugar seguro!
+
+APARIENCIA:
+┌─────────────────────────────────────────────────────┐
+│ API Key:                                            │
+│ AIzaSyDYqWz0eNKE1a2b3c4d5e6f7g8h9i0jk1...        │
+│ [Copiar]                                            │
+└─────────────────────────────────────────────────────┘
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PASO 2: REEMPLAZAR EN SCRIPT.JS
+═══════════════════════════════════════════════════════════════════════════════
+
+Tiempo: 1 minuto
+
+1. Abre script.js en tu editor de texto
+2. Busca la línea ~11 que dice:
+   apiKey: "AIzaSyDYqWz0eNKExxxxxxxxxxxxxxxxxxxxxx"
+3. Reemplaza lo que está entre comillas:
+   - DE: "AIzaSyDYqWz0eNKExxxxxxxxxxxxxxxxxxxxxx"
+   - A: Tu API Key que copiaste
+
+EJEMPLO:
+┌─────────────────────────────────────────────────────┐
+│ ANTES:                                              │
+│ apiKey: "AIzaSyDYqWz0eNKExxxxxxxxxxxxxxxxxxxxxx",  │
+│                                                    │
+│ DESPUÉS:                                            │
+│ apiKey: "AIzaSyDYqWz0eNKE1a2b3c4d5e6f7g8h9i0",    │
+└─────────────────────────────────────────────────────┘
+
+4. Guarda el archivo (Ctrl+S)
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PASO 3: HABILITAR STORAGE
+═══════════════════════════════════════════════════════════════════════════════
+
+Tiempo: 2 minutos
+
+1. Ve a Firebase Console
+2. Tu proyecto → Storage
+3. Si no aparece Storage, click "Crear"
+4. Click en "Reglas"
+5. Reemplaza TODO con esto:
+
+┌─────────────────────────────────────────────────────┐
+│ rules_version = '2';                               │
+│ service firebase.storage {                         │
+│   match /b/{bucket}/o {                            │
+│     match /{allPaths=**} {                          │
+│       allow read, write: if request.auth != null; │
+│     }                                              │
+│   }                                                │
+│ }                                                  │
+└─────────────────────────────────────────────────────┘
+
+6. Click "Publicar"
+7. Espera a que se actualice
+
+═══════════════════════════════════════════════════════════════════════════════
+
+PASO 4: HABILITAR FIRESTORE
+═══════════════════════════════════════════════════════════════════════════════
+
+Tiempo: 2 minutos
+
+1. Ve a Firebase Console
+2. Tu proyecto → Firestore Database
+3. Si no aparece, click "Crear base de datos"
+4. Selecciona:
+   - Modo: "Iniciar en modo de prueba"
+   - Ubicación: USA (cualquiera funciona)
+5. Click "Crear"
+6. Espera a que se cree (1-2 minutos)
+7. Click en "Reglas"
+8. Reemplaza TODO con esto:
+
+┌─────────────────────────────────────────────────────┐
+│ rules_version = '2';                               │
+│ service cloud.firestore {                          │
+│   match /databases/{database}/documents {          │
+│     match /users/{userId}/items/{itemId} {         │
+│       allow read, write:                           │
+│         if request.auth.uid == userId;            │
+│     }                                              │
+│   }                                                │
+│ }                                                  │
+└─────────────────────────────────────────────────────┘
+
+9. Click "Publicar"
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✅ VERIFICAR QUE FUNCIONA
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Abre index.html en tu navegador
+2. Abre la consola (F12)
+3. Deberías ver:
+
+   ✓ Firebase inicializado correctamente
+   ✓ Autenticación anónima exitosa
+   ✓ 0 archivo(s) cargados desde Firebase
+   ✓ Folder Personal iniciado correctamente
+
+4. Si ves esto → ¡FUNCIONA! ✅
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 PRUEBA TU PRIMERA SUBIDA
+═══════════════════════════════════════════════════════════════════════════════
+
+1. En index.html, click "Agregar"
+2. Click "Subir archivo"
+3. Selecciona un archivo (PDF, imagen, etc.)
+4. Verás la barra de progreso
+5. El archivo se sube a Firebase Storage
+6. Aparece en la grid
+
+¡Listo! ✨
+
+═══════════════════════════════════════════════════════════════════════════════
+
+❌ SI ALGO FALLA
+═══════════════════════════════════════════════════════════════════════════════
+
+ERROR: "Error: Permission denied for default bucket"
+→ Solución: Revisa que copiaste las reglas de Storage correctamente
+
+ERROR: "Error: Unknown provider"
+→ Solución: Asegúrate de que Firestore está habilitada (paso 4)
+
+ERROR: "apiKey is invalid"
+→ Solución: Verifica que copiaste correctamente tu API Key en script.js
+
+ERROR: No aparecen los archivos
+→ Solución: 
+  1. Revisa la consola (F12) para errores
+  2. Espera 5 segundos a que carguen
+  3. Recarga la página
+
+NO VE NADA EN LA CONSOLA:
+→ Solución:
+  1. Verifica que el archivo es script.js (no una copia)
+  2. Asegúrate de que guardaste los cambios
+  3. Haz Ctrl+Shift+R para limpiar caché
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 CHECKLIST FINAL
+═══════════════════════════════════════════════════════════════════════════════
+
+[ ] 1. ✓ Obtuve mi API Key
+[ ] 2. ✓ Reemplacé en script.js
+[ ] 3. ✓ Publiqué las reglas de Storage
+[ ] 4. ✓ Habilitéu Firebase Database (Firestore)
+[ ] 5. ✓ Publiqué las reglas de Firestore
+[ ] 6. ✓ Abrí index.html
+[ ] 7. ✓ Vi los logs de éxito en la consola
+[ ] 8. ✓ Subí un archivo exitosamente
+
+Si todo tiene ✓ → ¡FUNCIONA PERFECTAMENTE!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+💡 TIPS
+═══════════════════════════════════════════════════════════════════════════════
+
+• Mantén tu API Key segura (aunque se ve en el código, Firebase tiene reglas)
+• Los primeros 5GB son GRATIS
+• Después cuesta $0.18 por GB/mes
+• Puedes ver tu uso en Firebase Console → Storage
+• Los datos se guardan permanentemente
+
+═══════════════════════════════════════════════════════════════════════════════
+
+¡Listo! Tu Folder Personal está listo para almacenamiento en la nube 🌟
+
+═══════════════════════════════════════════════════════════════════════════════

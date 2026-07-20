@@ -1,0 +1,129 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║       ✅ VERIFICAR QUE FIREBASE STORAGE Y FIRESTORE ESTÉN HABILITADOS    ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+Después de obtener la API Key correcta, necesitas verificar que tengas 
+Storage y Firestore habilitados en tu proyecto.
+
+
+PASO 1: HABILITAR CLOUD FIRESTORE
+═══════════════════════════════════════════════════════════════════════════════
+
+1. Ve a: https://console.firebase.google.com
+2. Selecciona: "folder-personal-app"
+3. En el menú izquierdo, baja hasta "Compilación"
+4. Click en "Firestore Database"
+
+Si ves un botón "Crear base de datos":
+5. Click en "Crear base de datos"
+6. Selecciona:
+   - Modo: "Iniciar en modo de prueba"
+   - Ubicación: USA (cualquiera funciona)
+7. Click "Crear"
+8. Espera 1-2 minutos a que se cree
+
+Si ya existe Firestore:
+→ Continúa al Paso 3 (ver reglas)
+
+
+PASO 2: CONFIGURAR REGLAS DE FIRESTORE
+═══════════════════════════════════════════════════════════════════════════════
+
+1. En Firestore Database, click en "Reglas"
+2. Reemplaza TODO con esto:
+
+┌──────────────────────────────────────────────────────┐
+│ rules_version = '2';                                │
+│ service cloud.firestore {                           │
+│   match /databases/{database}/documents {           │
+│     match /users/{userId}/items/{itemId} {          │
+│       allow read, write: if request.auth.uid == userId;
+│     }                                               │
+│   }                                                 │
+│ }                                                   │
+└──────────────────────────────────────────────────────┘
+
+3. Click "Publicar"
+4. Espera a que se actualice
+
+
+PASO 3: HABILITAR CLOUD STORAGE
+═══════════════════════════════════════════════════════════════════════════════
+
+1. En el menú izquierdo, baja hasta "Compilación"
+2. Click en "Storage"
+
+Si ves un botón "Comenzar":
+3. Click "Comenzar"
+4. En el diálogo:
+   - Ubicación: USA (cualquiera funciona)
+   - Modo de seguridad: "Iniciar en modo de prueba"
+5. Click "Crear"
+6. Espera 1-2 minutos
+
+Si ya existe Storage:
+→ Continúa al Paso 4 (ver reglas)
+
+
+PASO 4: CONFIGURAR REGLAS DE STORAGE
+═══════════════════════════════════════════════════════════════════════════════
+
+1. En Storage, click en "Reglas"
+2. Reemplaza TODO con esto:
+
+┌──────────────────────────────────────────────────────┐
+│ rules_version = '2';                                │
+│ service firebase.storage {                          │
+│   match /b/{bucket}/o {                             │
+│     match /{allPaths=**} {                           │
+│       allow read, write: if request.auth != null;   │
+│     }                                               │
+│   }                                                 │
+│ }                                                   │
+└──────────────────────────────────────────────────────┘
+
+3. Click "Publicar"
+4. Espera a que se actualice
+
+
+PASO 5: VERIFICAR QUE TODO ESTÉ LISTO
+═══════════════════════════════════════════════════════════════════════════════
+
+Deberías ver en tu proyecto Firebase:
+
+✓ Firestore Database → "Datos"
+✓ Storage → "Archivos"
+✓ Authentication → (sin configurar, usamos anónimo)
+
+Si ves todo esto → ¡LISTO! ✅
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+CHECKLIST FINAL:
+═══════════════════════════════════════════════════════════════════════════════
+
+[ ] 1. Obtuve la API Key correcta
+[ ] 2. Reemplacé en index.html
+[ ] 3. Firestore Database está habilitado
+[ ] 4. Reglas de Firestore están publicadas
+[ ] 5. Cloud Storage está habilitado
+[ ] 6. Reglas de Storage están publicadas
+[ ] 7. Recargué la página (F5)
+[ ] 8. Veo "✓ Firebase inicializado correctamente" en consola
+
+Si TODO está checkeado → ¡FUNCIONA! 🎉
+
+
+═══════════════════════════════════════════════════════════════════════════════
+
+Si algo falla, ve al paso anterior. Generalmente son:
+
+1. API Key incorrecta → Ve a OBTENER_API_KEY.txt
+2. Storage/Firestore no habilitado → Este paso
+3. Reglas mal configuradas → Verifica que copiaste correctamente
+
+
+═══════════════════════════════════════════════════════════════════════════════

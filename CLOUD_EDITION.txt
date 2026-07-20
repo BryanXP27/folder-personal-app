@@ -1,0 +1,95 @@
+╔════════════════════════════════════════════════════════════════════════════╗
+║                                                                            ║
+║              ✅ FOLDER PERSONAL v3.0 - CLOUD READY                        ║
+║                                                                            ║
+║                    Almacenamiento ilimitado en Firebase                   ║
+║                                                                            ║
+╚════════════════════════════════════════════════════════════════════════════╝
+
+🎉 GRAN NOTICIA:
+
+Tu aplicación ahora está conectada a Firebase Storage.
+Puedes guardar archivos ILIMITADAMENTE en la nube ☁️
+
+═══════════════════════════════════════════════════════════════════════════════
+
+⚡ EN 3 PASOS:
+
+1. Obtén tu API Key de Firebase Console
+   (Configuración → Tu proyecto → API Key)
+
+2. Abre script.js y reemplaza:
+   apiKey: "AIzaSyDYqWz0eNKExxxxxxxxxxxxxxxxxxxxxx"
+   
+3. Configura las reglas de Firebase:
+   - Storage: Permite lectura/escritura autenticada
+   - Firestore: Permite acceso al usuario
+
+📄 Ver detalles en: FIREBASE_SETUP.txt
+
+═══════════════════════════════════════════════════════════════════════════════
+
+✨ BENEFICIOS:
+
+ANTES (v2.0):
+❌ 50 MB máximo
+❌ Solo un navegador
+❌ Sin sincronización
+
+DESPUÉS (v3.0):
+✅ ILIMITADO
+✅ Cualquier dispositivo
+✅ Sincronización automática
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🚀 LO QUE FUNCIONA:
+
+✅ Subir PDF, Word, Excel, PowerPoint
+✅ Subir imágenes y videos
+✅ Agregar enlaces con vista previa
+✅ Buscar archivos
+✅ Filtrar por tipo
+✅ Eliminar archivos
+✅ Tema claro/oscuro
+✅ Ver progreso de subida
+✅ Acceso desde cualquier dispositivo
+
+═══════════════════════════════════════════════════════════════════════════════
+
+📋 CHECKLIST DE CONFIGURACIÓN:
+
+[ ] 1. Obtén API Key de Firebase Console
+[ ] 2. Reemplaza en script.js (línea del apiKey)
+[ ] 3. Configura reglas de Storage
+[ ] 4. Habilita Firestore Database
+[ ] 5. Configura reglas de Firestore
+[ ] 6. Abre index.html
+[ ] 7. ¡Prueba subiendo un archivo!
+
+═══════════════════════════════════════════════════════════════════════════════
+
+💾 CÓMO FUNCIONA:
+
+1. Selecciona un archivo
+2. Se sube a Firebase Storage
+3. Se guarda metadata en Firestore
+4. Aparece en la grid automáticamente
+5. Puedes acceder desde otros dispositivos
+
+═══════════════════════════════════════════════════════════════════════════════
+
+🔒 SEGURIDAD:
+
+• Cada usuario tiene su propio UID (anonimo)
+• Los archivos se almacenan en carpetas privadas
+• Solo tú puedes acceder a tus archivos
+• Las reglas de Firebase protegen los datos
+
+═══════════════════════════════════════════════════════════════════════════════
+
+¿LISTO PARA COMENZAR?
+
+Lee: FIREBASE_SETUP.txt (instrucciones detalladas)
+
+═══════════════════════════════════════════════════════════════════════════════
