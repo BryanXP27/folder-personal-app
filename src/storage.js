@@ -35,40 +35,40 @@ async function uploadToCloudinary(file, onProgress) {
   return data.secure_url
 }
 
-export async function uploadFile(userId, file, onProgress) {
+async function uploadToFirebase(userId, file, onProgress) {
   const filePath = `${userId}/${Date.now()}_${file.name}`
   const storageRef = ref(storage, filePath)
+  const uploadTask = uploadBytesResumable(storageRef, file)
 
+  uploadTask.on('state_changed', (snapshot) => {
+    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+    if (onProgress) onProgress(progress)
+  })
+
+  await uploadTask
+  const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
+  return { downloadURL, filePath }
+}
+
+export async function uploadFile(userId, file, onProgress) {
   try {
-    const uploadTask = uploadBytesResumable(storageRef, file)
-    const downloadURL = await new Promise((resolve, reject) => {
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          if (onProgress) onProgress(progress)
-        },
-        (error) => reject(error),
-        async () => {
-          const url = await getDownloadURL(uploadTask.snapshot.ref)
-          resolve(url)
-        }
-      )
-    })
-    return { downloadURL, filePath, storage: 'firebase' }
+    const result = await uploadToFirebase(userId, file, onProgress)
+    return { ...result, storage: 'firebase' }
   } catch (e) {
     console.warn('[Storage] Firebase fallback a Cloudinary:', e.message)
-    try {
-      const url = await uploadToCloudinary(file, onProgress)
-      return { downloadURL: url, filePath: null, storage: 'cloudinary' }
-    } catch (e2) {
-      console.warn('[Storage] Cloudinary fallback a base64:', e2.message)
-      if (onProgress) onProgress(50)
-      const dataUrl = await fileToBase64(file)
-      if (onProgress) onProgress(100)
-      return { downloadURL: dataUrl, filePath: null, storage: 'base64' }
-    }
   }
+
+  try {
+    const url = await uploadToCloudinary(file, onProgress)
+    return { downloadURL: url, filePath: null, storage: 'cloudinary' }
+  } catch (e) {
+    console.warn('[Storage] Cloudinary fallback a base64:', e.message)
+  }
+
+  if (onProgress) onProgress(50)
+  const dataUrl = await fileToBase64(file)
+  if (onProgress) onProgress(100)
+  return { downloadURL: dataUrl, filePath: null, storage: 'base64' }
 }
 
 export async function deleteStorageFile(filePath) {
@@ -82,35 +82,28 @@ export async function deleteStorageFile(filePath) {
 }
 
 export async function uploadProfilePhoto(userId, file, onProgress) {
-  const filePath = `${userId}/profile/photo.jpg`
-  const storageRef = ref(storage, filePath)
-
   try {
+    const filePath = `${userId}/profile/photo.jpg`
+    const storageRef = ref(storage, filePath)
     const uploadTask = uploadBytesResumable(storageRef, file)
-    return await new Promise((resolve, reject) => {
-      uploadTask.on(
-        'state_changed',
-        (snapshot) => {
-          const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-          if (onProgress) onProgress(progress)
-        },
-        (error) => reject(error),
-        async () => {
-          const url = await getDownloadURL(uploadTask.snapshot.ref)
-          resolve(url)
-        }
-      )
+    uploadTask.on('state_changed', (snapshot) => {
+      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
+      if (onProgress) onProgress(progress)
     })
+    await uploadTask
+    return await getDownloadURL(uploadTask.snapshot.ref)
   } catch (e) {
     console.warn('[Storage] Firebase fallback a Cloudinary:', e.message)
-    try {
-      return await uploadToCloudinary(file, onProgress)
-    } catch (e2) {
-      console.warn('[Storage] Cloudinary fallback a base64:', e2.message)
-      if (onProgress) onProgress(50)
-      const dataUrl = await fileToBase64(file)
-      if (onProgress) onProgress(100)
-      return dataUrl
-    }
   }
+
+  try {
+    return await uploadToCloudinary(file, onProgress)
+  } catch (e) {
+    console.warn('[Storage] Cloudinary fallback a base64:', e.message)
+  }
+
+  if (onProgress) onProgress(50)
+  const dataUrl = await fileToBase64(file)
+  if (onProgress) onProgress(100)
+  return dataUrl
 }
