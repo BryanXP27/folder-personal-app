@@ -1,0 +1,32 @@
+# ════════════════════════════════════════════════════════════════════════
+# 3. FLUJO DE VERIFICACIÓN DE CONFIGURACIÓN (CONEXIÓN DB)
+# ════════════════════════════════════════════════════════════════════════
+# OBJETIVO:
+# Simula una "verificación de conexión a la base de datos".
+# Comprueba que el archivo index.html contenga los placeholders para las
+# variables de entorno de Firebase, asegurando que el despliegue no falle.
+# ════════════════════════════════════════════════════════════════════════
+
+name: '3 - Firebase Config Check'
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  check-config:
+    name: Check Firebase Config Placeholders
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Verify Vercel placeholders in index.html
+        run: |
+          if ! grep -q "VITE_FIREBASE_API_KEY" index.html; then
+            echo "❌ Error: Firebase API Key placeholder is missing in index.html!"
+            exit 1
+          fi
+          echo "✅ Firebase config placeholders are present."
