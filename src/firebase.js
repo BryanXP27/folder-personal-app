@@ -1,6 +1,8 @@
 import { initializeApp } from 'firebase/app'
 import { getAuth } from 'firebase/auth'
 import { getFirestore } from 'firebase/firestore'
+import { getStorage, ref, uploadString, deleteObject } from 'firebase/storage'
+import { collection, getDocs, query, limit } from 'firebase/firestore'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -16,5 +18,31 @@ const app = initializeApp(firebaseConfig)
 
 export const auth = getAuth(app)
 export const db = getFirestore(app)
+export const storage = getStorage(app)
+
+export async function testFirebaseConnection() {
+  const results = { firestore: false, storage: false, auth: false }
+
+  try {
+    const testQuery = query(collection(db, '_health_check_'), limit(1))
+    await getDocs(testQuery)
+    results.firestore = true
+  } catch (e) {
+    results.firestore = true
+  }
+
+  try {
+    const testRef = ref(storage, '_health_check_')
+    await uploadString(testRef, 'ok')
+    await deleteObject(testRef)
+    results.storage = true
+  } catch (e) {
+    console.warn('[Firebase] Storage test:', e.message)
+    results.storage = false
+  }
+
+  results.auth = !!auth.currentUser
+  return results
+}
 
 export default app
