@@ -714,8 +714,17 @@ class FolderPersonal {
       window.open(this.selectedItem.url, '_blank')
       return
     }
+    if (this.selectedItem.url?.startsWith('data:')) {
+      const a = document.createElement('a')
+      a.href = this.selectedItem.url
+      a.download = this.selectedItem.name
+      document.body.appendChild(a)
+      a.click()
+      a.remove()
+      return
+    }
+    showNotification('Iniciando descarga...', 'info')
     try {
-      showNotification('Iniciando descarga...', 'info')
       const res = await fetch(this.selectedItem.url)
       const blob = await res.blob()
       const url = window.URL.createObjectURL(blob)
