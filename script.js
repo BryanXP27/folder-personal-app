@@ -114,8 +114,16 @@ class FolderPersonal {
 
         try {
             errorElement.textContent = '';
-            await signInWithEmailAndPassword(this.auth, email, password);
-            // onAuthStateChanged se encargará del resto
+            // Primero, intenta iniciar sesión normalmente
+            const userCredential = await signInWithEmailAndPassword(this.auth, email, password);
+
+            // Si hay un usuario anónimo activo, intenta vincularlo
+            if (this.auth.currentUser && this.auth.currentUser.isAnonymous) {
+                const { linkWithCredential, EmailAuthProvider } = window.firebase_auth_fns;
+                const credential = EmailAuthProvider.credential(email, password);
+                await linkWithCredential(this.auth.currentUser, credential);
+                console.log('✓ Cuenta anónima vinculada exitosamente a', email);
+            }
         } catch (error) {
             console.error('Error de inicio de sesión:', error.code);
             errorElement.textContent = 'Correo o contraseña incorrectos.';
