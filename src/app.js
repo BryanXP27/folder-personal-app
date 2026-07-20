@@ -73,9 +73,11 @@ class FolderPersonal {
   showProfileView() {
     this.currentFilter = 'profile'
     document.getElementById('itemsGrid').style.display = 'none'
+    document.getElementById('emptyState').style.display = 'none'
     document.getElementById('profileView').style.display = 'block'
     document.getElementById('pageTitle').textContent = 'Perfil del Usuario'
     document.getElementById('itemsCount').style.display = 'none'
+    document.getElementById('btnAdd').style.display = 'none'
     document.querySelectorAll('.nav-item').forEach((b) => b.classList.remove('active'))
     const profileBtn = document.querySelector('[data-filter="profile"]')
     if (profileBtn) profileBtn.classList.add('active')
@@ -259,12 +261,15 @@ class FolderPersonal {
 
     if (this.currentFilter === 'profile') {
       document.getElementById('itemsGrid').style.display = 'none'
+      document.getElementById('emptyState').style.display = 'none'
       document.getElementById('profileView').style.display = 'block'
       document.getElementById('itemsCount').style.display = 'none'
+      document.getElementById('btnAdd').style.display = 'none'
     } else {
       document.getElementById('itemsGrid').style.display = 'grid'
       document.getElementById('profileView').style.display = 'none'
       document.getElementById('itemsCount').style.display = 'block'
+      document.getElementById('btnAdd').style.display = 'flex'
       this.render()
     }
   }
@@ -342,13 +347,16 @@ class FolderPersonal {
   render() {
     if (this.currentFilter === 'profile') {
       document.getElementById('itemsGrid').style.display = 'none'
+      document.getElementById('emptyState').style.display = 'none'
       document.getElementById('profileView').style.display = 'block'
       document.getElementById('itemsCount').style.display = 'none'
+      document.getElementById('btnAdd').style.display = 'none'
       return
     }
     document.getElementById('itemsGrid').style.display = 'grid'
     document.getElementById('profileView').style.display = 'none'
     document.getElementById('itemsCount').style.display = 'block'
+    document.getElementById('btnAdd').style.display = 'flex'
 
     const currentFolders = this.folders.filter(
       (f) => f.parentId === this.currentFolderId
