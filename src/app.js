@@ -10,7 +10,7 @@ import {
   updateItem,
   saveProfile,
 } from './firestore.js'
-import { uploadFile, deleteStorageFile, uploadProfilePhoto } from './storage.js'
+import { uploadFile, deleteStorageFile, uploadProfilePhoto, uploadPreviewImage } from './storage.js'
 import {
   showNotification,
   closeModal,
@@ -254,6 +254,28 @@ class FolderPersonal {
     })
     document.getElementById('btnChangePhoto')?.addEventListener('click', () => {
       document.getElementById('profilePhotoInput')?.click()
+    })
+    document.getElementById('linkPreviewUrl')?.addEventListener('input', (e) => {
+      const img = document.getElementById('linkPreviewImg')
+      const val = e.target.value.trim()
+      if (val) {
+        img.src = val
+        img.style.display = 'block'
+      } else {
+        img.style.display = 'none'
+      }
+    })
+    document.getElementById('btnUploadLinkPreview')?.addEventListener('click', () => {
+      document.getElementById('linkPreviewFileInput')?.click()
+    })
+    document.getElementById('linkPreviewFileInput')?.addEventListener('change', (e) => {
+      if (e.target.files.length) this.handleLinkPreviewUpload(e.target.files[0])
+    })
+    document.getElementById('btnUploadEditPreview')?.addEventListener('click', () => {
+      document.getElementById('editPreviewFileInput')?.click()
+    })
+    document.getElementById('editPreviewFileInput')?.addEventListener('change', (e) => {
+      if (e.target.files.length) this.handleEditPreviewUpload(e.target.files[0])
     })
     document.getElementById('editItemPreview')?.addEventListener('input', (e) => {
       const img = document.getElementById('editItemPreviewImg')
@@ -810,6 +832,42 @@ class FolderPersonal {
       closeModal(document.getElementById('editProfileModal'))
     } catch {
       showNotification('Error al guardar perfil', 'error')
+    }
+  }
+
+  async handleLinkPreviewUpload(file) {
+    if (!file.type.startsWith('image/')) {
+      showNotification('Solo se aceptan imagenes', 'error')
+      return
+    }
+    showNotification('Subiendo imagen...', 'info')
+    try {
+      const url = await uploadPreviewImage(file)
+      document.getElementById('linkPreviewUrl').value = url
+      const img = document.getElementById('linkPreviewImg')
+      img.src = url
+      img.style.display = 'block'
+      showNotification('Imagen lista como preview', 'success')
+    } catch (e) {
+      showNotification('Error al subir imagen: ' + e.message, 'error')
+    }
+  }
+
+  async handleEditPreviewUpload(file) {
+    if (!file.type.startsWith('image/')) {
+      showNotification('Solo se aceptan imagenes', 'error')
+      return
+    }
+    showNotification('Subiendo imagen...', 'info')
+    try {
+      const url = await uploadPreviewImage(file)
+      document.getElementById('editItemPreview').value = url
+      const img = document.getElementById('editItemPreviewImg')
+      img.src = url
+      img.style.display = 'block'
+      showNotification('Imagen lista como preview', 'success')
+    } catch (e) {
+      showNotification('Error al subir imagen: ' + e.message, 'error')
     }
   }
 

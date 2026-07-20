@@ -230,8 +230,13 @@
                         <input type="text" id="linkTitle" placeholder="Mi enlace favorito">
                     </div>
                     <div class="form-group">
-                        <label for="linkPreviewUrl">URL de imagen personalizada (opcional):</label>
-                        <input type="url" id="linkPreviewUrl" placeholder="https://ejemplo.com/imagen.jpg">
+                        <label>Imagen de vista previa:</label>
+                        <div style="display:flex;gap:8px;flex-wrap:wrap">
+                            <input type="url" id="linkPreviewUrl" placeholder="URL de imagen..." style="flex:1;min-width:180px">
+                            <button class="btn-secondary" type="button" id="btnUploadLinkPreview" style="white-space:nowrap">Subir imagen</button>
+                        </div>
+                        <input type="file" id="linkPreviewFileInput" accept="image/*" hidden>
+                        <img id="linkPreviewImg" style="max-width:150px;max-height:100px;border-radius:6px;display:none;margin-top:8px;object-fit:cover">
                     </div>
                     <button class="btn-primary" id="btnAddLink">Agregar enlace</button>
                 </div>
@@ -408,10 +413,13 @@
                     <input type="text" id="editItemName" placeholder="Nombre del archivo">
                 </div>
                 <div class="form-group">
-                    <label for="editItemPreview">URL de imagen de vista previa:</label>
-                    <input type="url" id="editItemPreview" placeholder="https://ejemplo.com/imagen.jpg">
-                </div>
-                <img id="editItemPreviewImg" style="max-width:200px;max-height:150px;border-radius:8px;display:none;margin-top:8px">
+                    <label>Imagen de vista previa:</label>
+                    <div style="display:flex;gap:8px;flex-wrap:wrap">
+                        <input type="url" id="editItemPreview" placeholder="URL de imagen..." style="flex:1;min-width:180px">
+                        <button class="btn-secondary" type="button" id="btnUploadEditPreview" style="white-space:nowrap">Subir imagen</button>
+                    </div>
+                    <input type="file" id="editPreviewFileInput" accept="image/*" hidden>
+                    <img id="editItemPreviewImg" style="max-width:200px;max-height:150px;border-radius:8px;display:none;margin-top:8px;object-fit:cover">
             </div>
             <div class="modal-footer">
                 <button class="btn-secondary" id="btnCancelEditItem">Cancelar</button>

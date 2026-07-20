@@ -13,6 +13,28 @@ function fileToBase64(file) {
   })
 }
 
+export async function uploadPreviewImage(file, onProgress) {
+  if (onProgress) onProgress(10)
+  const formData = new FormData()
+  formData.append('file', file)
+  formData.append('upload_preset', UPLOAD_PRESET)
+
+  const res = await fetch(`https://api.cloudinary.com/v1_1/${CLOUD_NAME}/auto/upload`, {
+    method: 'POST',
+    body: formData,
+  })
+
+  if (!res.ok) {
+    const err = await res.json().catch(() => ({}))
+    throw new Error(err.error?.message || `Error ${res.status}`)
+  }
+
+  if (onProgress) onProgress(70)
+  const data = await res.json()
+  if (onProgress) onProgress(100)
+  return data.secure_url
+}
+
 async function uploadToCloudinary(file, onProgress) {
   if (onProgress) onProgress(10)
   const formData = new FormData()
@@ -33,24 +55,6 @@ async function uploadToCloudinary(file, onProgress) {
   const data = await res.json()
   if (onProgress) onProgress(100)
   return data.secure_url
-}
-
-async function uploadToFirebase(userId, file, onProgress) {
-  const filePath = `${userId}/${Date.now()}_${file.name}`
-  const storageRef = ref(storage, filePath)
-  const uploadTask = uploadBytesResumable(storageRef, file)
-
-  uploadTask.on('state_changed', (snapshot) => {
-    const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-    if (onProgress) onProgress(progress)
-  })
-
-  const timeout = new Promise((_, reject) =>
-    setTimeout(() => reject(new Error('timeout')), 8000)
-  )
-  await Promise.race([uploadTask, timeout])
-  const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
-  return { downloadURL, filePath }
 }
 
 export async function uploadFile(userId, file, onProgress) {
