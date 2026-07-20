@@ -55,13 +55,6 @@ async function uploadToFirebase(userId, file, onProgress) {
 
 export async function uploadFile(userId, file, onProgress) {
   try {
-    const result = await uploadToFirebase(userId, file, onProgress)
-    return { ...result, storage: 'firebase' }
-  } catch (e) {
-    console.warn('[Storage] Firebase fallback a Cloudinary:', e.message)
-  }
-
-  try {
     const url = await uploadToCloudinary(file, onProgress)
     return { downloadURL: url, filePath: null, storage: 'cloudinary' }
   } catch (e) {
@@ -85,23 +78,6 @@ export async function deleteStorageFile(filePath) {
 }
 
 export async function uploadProfilePhoto(userId, file, onProgress) {
-  try {
-    const filePath = `${userId}/profile/photo.jpg`
-    const storageRef = ref(storage, filePath)
-    const uploadTask = uploadBytesResumable(storageRef, file)
-    uploadTask.on('state_changed', (snapshot) => {
-      const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
-      if (onProgress) onProgress(progress)
-    })
-    const timeout = new Promise((_, reject) =>
-      setTimeout(() => reject(new Error('timeout')), 8000)
-    )
-    await Promise.race([uploadTask, timeout])
-    return await getDownloadURL(uploadTask.snapshot.ref)
-  } catch (e) {
-    console.warn('[Storage] Firebase fallback a Cloudinary:', e.message)
-  }
-
   try {
     return await uploadToCloudinary(file, onProgress)
   } catch (e) {
