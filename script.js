@@ -28,30 +28,52 @@ class FolderPersonal {
         this.userId = null;
         this.unsubscribe = null; // Para detener el listener de Firestore
         this.initialize();
+        this.onConfirm = null;
     }
 
     async initialize() {
         try {
             console.log('Inicializando Folder Personal v3.0...');
-
-            // Esperar a que Firebase se inicialice desde index.html
             await this.waitForFirebase();
-
-            // Autenticación anónima
-            await this.anonymousSignIn();
-            
-            // Ahora que tenemos usuario, configuramos la UI y cargamos datos
-            this.setupEventListeners();
-            this.applyTheme();
-
-            // Cargar datos desde Firestore
-            this.loadItemsFromFirestore();
-
-            console.log('✓ Folder Personal v3.0 iniciado correctamente');
+            this.handleAuthStateChange();
         } catch (error) {
             console.error('Error fatal en la inicialización:', error);
             showNotification('Error al iniciar la aplicación', 'error');
         }
+    }
+
+    handleAuthStateChange() {
+        const { onAuthStateChanged } = window.firebase_auth_fns;
+        onAuthStateChanged(this.auth, (user) => {
+            const loginContainer = document.getElementById('loginContainer');
+            const mainContainer = document.querySelector('.container');
+
+            if (user) {
+                // Usuario ha iniciado sesión
+                console.log(`Usuario conectado: ${user.email}`);
+                this.userId = user.uid;
+                
+                loginContainer.classList.add('hidden');
+                mainContainer.style.display = 'flex';
+
+                this.setupAppEventListeners();
+                this.applyTheme();
+                this.loadItemsFromFirestore();
+                document.getElementById('userEmail').textContent = user.email;
+
+            } else {
+                // Usuario ha cerrado sesión
+                console.log('Usuario desconectado.');
+                this.userId = null;
+                if (this.unsubscribe) this.unsubscribe(); // Detener listener de datos
+                this.items = [];
+                this.render();
+
+                loginContainer.classList.remove('hidden');
+                mainContainer.style.display = 'none';
+                this.setupLoginEventListeners();
+            }
+        });
     }
 
     waitForFirebase() {
@@ -64,25 +86,49 @@ class FolderPersonal {
                     this.auth = window.firebaseAuth;
                     this.db = window.firebaseDb;
                     this.storage = window.firebaseStorage;
-                    this.signInAnonymously = window.signInAnonymously;
                     resolve();
                 }
             }, 100);
         });
     }
 
-    async anonymousSignIn() {
+    setupLoginEventListeners() {
+        const btnLogin = document.getElementById('btnLogin');
+        // Usamos .cloneNode para remover listeners antiguos y evitar duplicados
+        const newBtnLogin = btnLogin.cloneNode(true);
+        btnLogin.parentNode.replaceChild(newBtnLogin, btnLogin);
+
+        newBtnLogin.addEventListener('click', () => this.handleLogin());
+    }
+
+    async handleLogin() {
+        const { signInWithEmailAndPassword } = window.firebase_auth_fns;
+        const email = document.getElementById('emailInput').value;
+        const password = document.getElementById('passwordInput').value;
+        const errorElement = document.getElementById('loginError');
+
+        if (!email || !password) {
+            errorElement.textContent = 'Por favor, ingresa correo y contraseña.';
+            return;
+        }
+
         try {
-            const userCredential = await this.signInAnonymously(this.auth);
-            this.userId = userCredential.user.uid;
-            console.log(`✓ Autenticación anónima exitosa. UserID: ${this.userId}`);
+            errorElement.textContent = '';
+            await signInWithEmailAndPassword(this.auth, email, password);
+            // onAuthStateChanged se encargará del resto
         } catch (error) {
-            console.error('Error en la autenticación anónima:', error);
-            showNotification('Error: ' + error.message, 'error');
+            console.error('Error de inicio de sesión:', error.code);
+            errorElement.textContent = 'Correo o contraseña incorrectos.';
         }
     }
 
-    setupEventListeners() {
+    async handleLogout() {
+        const { signOut } = window.firebase_auth_fns;
+        await signOut(this.auth);
+        // onAuthStateChanged se encargará del resto
+    }
+
+    setupAppEventListeners() {
         try {
             console.log('Configurando event listeners...');
 
@@ -179,6 +225,10 @@ class FolderPersonal {
             if (btnClearAll) {
                 btnClearAll.addEventListener('click', () => this.confirmClearAll());
             }
+            
+            // Botón de Logout
+            const btnLogout = document.getElementById('btnLogout');
+            if (btnLogout) btnLogout.addEventListener('click', () => this.handleLogout());
 
             // --- Cierre de Modales (Overlay) ---
             document.querySelectorAll('.modal').forEach(modal => {
@@ -190,7 +240,7 @@ class FolderPersonal {
             console.log('✓ Event listeners configurados');
         } catch (error) {
             showNotification('Error al configurar interacciones', 'error');
-            console.error('Error en setupEventListeners:', error);
+            console.error('Error en setupAppEventListeners:', error);
         }
     }
 
@@ -785,13 +835,7 @@ class FolderPersonal {
 
 // Inicializar app cuando el DOM esté listo
 document.addEventListener('DOMContentLoaded', () => {
-    // Espera a que el script principal inicialice Firebase
-    const checkFirebaseInterval = setInterval(() => {
-        if (window.firebaseInitialized) {
-            clearInterval(checkFirebaseInterval);
-            console.log('=== Folder Personal v3.0 - Cloud Edition ===');
-            // Inicializar la aplicación principal
-            window.folderApp = new FolderPersonal();
-        }
-    }, 100);
+    console.log('=== Folder Personal v3.0 - Cloud Edition ===');
+    // Inicializar la aplicación principal
+    window.folderApp = new FolderPersonal();
 });

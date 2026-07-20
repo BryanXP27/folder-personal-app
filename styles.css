@@ -49,6 +49,7 @@ body {
 
 .container {
     display: flex;
+    display: none; /* Oculto por defecto, se muestra con JS */
     height: 100vh;
     gap: 0;
 }
@@ -767,6 +768,57 @@ body {
     background: linear-gradient(90deg, var(--primary), var(--accent));
     width: 0%;
     transition: width 0.3s ease;
+}
+
+/* ========== LOGIN SCREEN ========== */
+.login-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 100%;
+    height: 100vh;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 3000;
+    background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 100%);
+}
+
+.login-container.hidden {
+    display: none;
+}
+
+.login-box {
+    background: var(--surface);
+    padding: 40px;
+    border-radius: var(--radius);
+    border: 1px solid var(--border);
+    width: 100%;
+    max-width: 400px;
+    text-align: center;
+    box-shadow: var(--shadow);
+}
+
+.login-box .logo {
+    justify-content: center;
+    border-bottom: none;
+    padding-bottom: 16px;
+}
+
+.login-box h3 {
+    font-size: 22px;
+    margin-bottom: 24px;
+}
+
+.login-box .form-group {
+    text-align: left;
+}
+
+.login-error {
+    color: var(--danger);
+    font-size: 13px;
+    margin-top: 16px;
+    height: 16px; /* Para evitar que el layout salte */
 }
 
 .storage-info p {
