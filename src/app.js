@@ -11,7 +11,6 @@ import {
   saveProfile,
 } from './firestore.js'
 import { uploadFile, deleteStorageFile, uploadProfilePhoto } from './storage.js'
-import { testFirebaseConnection } from './firebase.js'
 import {
   showNotification,
   closeModal,
@@ -77,15 +76,7 @@ class FolderPersonal {
     this.loadData()
     this.showProfileView()
     this.loadProfile()
-    testFirebaseConnection().then((res) => {
-      console.log('[App] Conexion Firebase:', res)
-      if (!res.storage) {
-        showNotification(
-          'Storage no accesible. Revisa las reglas de seguridad en Firebase Console.',
-          'error'
-        )
-      }
-    })
+    console.log('[App] Almacenamiento: Firestore (base64)')
   }
 
   showProfileView() {
@@ -523,7 +514,7 @@ class FolderPersonal {
     const progressDiv = document.getElementById('uploadProgress')
     if (progressDiv) progressDiv.style.display = 'block'
     try {
-      const { downloadURL, filePath } = await uploadFile(this.userId, file, (p) => {
+      const { downloadURL } = await uploadFile(this.userId, file, (p) => {
         if (progressText) progressText.textContent = `Subiendo ${file.name}... ${Math.round(p)}%`
         if (progressFill) progressFill.style.width = `${p}%`
       })
@@ -532,7 +523,6 @@ class FolderPersonal {
         type,
         size: formatFileSize(file.size),
         url: downloadURL,
-        path: filePath,
         folderId: this.currentFolderId,
       })
       this.items.unshift({
@@ -541,7 +531,6 @@ class FolderPersonal {
         type,
         size: formatFileSize(file.size),
         url: downloadURL,
-        path: filePath,
         folderId: this.currentFolderId,
         createdAt: new Date(),
       })
@@ -554,14 +543,7 @@ class FolderPersonal {
       }
     } catch (err) {
       console.error('[Upload] Error:', err)
-      const msg =
-        err?.code === 'storage/unauthorized'
-          ? 'Permiso denegado. Revisa reglas de Storage en Firebase Console.'
-          : err?.code === 'storage/canceled'
-          ? 'Subida cancelada.'
-          : err?.code === 'storage/retry-limit-exceeded'
-          ? 'Limite de reintentos excedido. Revisa tu conexion.'
-          : `Error al subir ${file.name}: ${err?.message || 'desconocido'}`
+      const msg = `Error al subir ${file.name}: ${err?.message || 'desconocido'}`
       showNotification(msg, 'error')
     }
     if (progressDiv) progressDiv.style.display = 'none'
@@ -714,27 +696,21 @@ class FolderPersonal {
       window.open(this.selectedItem.url, '_blank')
       return
     }
-    try {
-      showNotification('Iniciando descarga...', 'info')
-      const res = await fetch(this.selectedItem.url)
-      const blob = await res.blob()
-      const url = window.URL.createObjectURL(blob)
+    if (this.selectedItem.url?.startsWith('data:')) {
       const a = document.createElement('a')
-      a.style.display = 'none'
-      a.href = url
+      a.href = this.selectedItem.url
       a.download = this.selectedItem.name
       document.body.appendChild(a)
       a.click()
-      window.URL.revokeObjectURL(url)
       a.remove()
-    } catch {
-      showNotification('Error al descargar', 'error')
+      return
     }
+    window.open(this.selectedItem.url, '_blank')
   }
 
   updateStorageIndicator() {
     const el = document.getElementById('storageText')
-    if (el) el.textContent = `Conectado a la nube. ${this.items.length} elementos.`
+    if (el) el.textContent = `${this.items.length} elemento${this.items.length !== 1 ? 's' : ''} en Firestore`
   }
 
   openEditProfile() {
