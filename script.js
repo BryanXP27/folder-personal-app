@@ -579,8 +579,8 @@ class FolderPersonal {
     }
 
     async deleteItemFromFirebase(item) {
-        const { doc, deleteDoc } = window.firebase_firestore_fns;
-        const { ref, deleteObject } = window.firebase_storage_fns;
+        const { doc, deleteDoc } = window.firebase_firestore_fns; // Corregido
+        const { ref, deleteObject } = window.firebase_storage_fns; // Corregido
 
         try {
             // Borrar metadatos de Firestore
