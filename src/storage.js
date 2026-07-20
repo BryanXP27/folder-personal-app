@@ -45,7 +45,10 @@ async function uploadToFirebase(userId, file, onProgress) {
     if (onProgress) onProgress(progress)
   })
 
-  await uploadTask
+  const timeout = new Promise((_, reject) =>
+    setTimeout(() => reject(new Error('timeout')), 8000)
+  )
+  await Promise.race([uploadTask, timeout])
   const downloadURL = await getDownloadURL(uploadTask.snapshot.ref)
   return { downloadURL, filePath }
 }
@@ -90,7 +93,10 @@ export async function uploadProfilePhoto(userId, file, onProgress) {
       const progress = (snapshot.bytesTransferred / snapshot.totalBytes) * 100
       if (onProgress) onProgress(progress)
     })
-    await uploadTask
+    const timeout = new Promise((_, reject) =>
+      setTimeout(() => reject(new Error('timeout')), 8000)
+    )
+    await Promise.race([uploadTask, timeout])
     return await getDownloadURL(uploadTask.snapshot.ref)
   } catch (e) {
     console.warn('[Storage] Firebase fallback a Cloudinary:', e.message)
