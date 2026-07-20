@@ -10,7 +10,7 @@ import {
   updateItem,
   saveProfile,
 } from './firestore.js'
-import { uploadFile, deleteStorageFile, uploadProfilePhoto, uploadPreviewImage } from './storage.js'
+import { uploadFile, deleteStorageFile, uploadProfilePhoto } from './storage.js'
 import { testFirebaseConnection } from './firebase.js'
 import {
   showNotification,
@@ -876,17 +876,12 @@ class FolderPersonal {
       showNotification('Solo imágenes', 'error')
       return
     }
-    showNotification('Subiendo imagen...', 'info')
-    try {
-      const url = await uploadPreviewImage(this.userId, file)
-      document.getElementById('linkPreviewUrl').value = url
-      const img = document.getElementById('linkPreviewImg')
-      img.src = url
-      img.style.display = 'block'
-      showNotification('Imagen lista', 'success')
-    } catch {
-      showNotification('Error al subir imagen', 'error')
-    }
+    const url = await this.fileToBase64(file)
+    document.getElementById('linkPreviewUrl').value = url
+    const img = document.getElementById('linkPreviewImg')
+    img.src = url
+    img.style.display = 'block'
+    showNotification('Imagen lista', 'success')
   }
 
   async handleEditPreviewUpload(file) {
@@ -894,17 +889,21 @@ class FolderPersonal {
       showNotification('Solo imágenes', 'error')
       return
     }
-    showNotification('Subiendo imagen...', 'info')
-    try {
-      const url = await uploadPreviewImage(this.userId, file)
-      document.getElementById('editItemPreview').value = url
-      const img = document.getElementById('editItemPreviewImg')
-      img.src = url
-      img.style.display = 'block'
-      showNotification('Imagen lista', 'success')
-    } catch {
-      showNotification('Error al subir imagen', 'error')
-    }
+    const url = await this.fileToBase64(file)
+    document.getElementById('editItemPreview').value = url
+    const img = document.getElementById('editItemPreviewImg')
+    img.src = url
+    img.style.display = 'block'
+    showNotification('Imagen lista', 'success')
+  }
+
+  fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader()
+      reader.onload = () => resolve(reader.result)
+      reader.onerror = reject
+      reader.readAsDataURL(file)
+    })
   }
 }
 
