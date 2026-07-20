@@ -305,7 +305,7 @@
     <script type="module">
         // Importar funciones necesarias de los SDKs
         import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut, linkWithCredential, EmailAuthProvider } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+        import { getAuth, signInWithEmailAndPassword, onAuthStateChanged, signOut } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
         import { getStorage, ref, uploadBytesResumable, getDownloadURL, deleteObject } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-storage.js";
         import { getFirestore, collection, onSnapshot, addDoc, deleteDoc, doc, query, orderBy, serverTimestamp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
 
@@ -331,7 +331,7 @@
             window.firebaseDb = getFirestore(app);
             
             // Exponer las funciones de autenticación que usaremos
-            window.firebase_auth_fns = { signInWithEmailAndPassword, onAuthStateChanged, signOut, linkWithCredential, EmailAuthProvider };
+            window.firebase_auth_fns = { signInWithEmailAndPassword, onAuthStateChanged, signOut };
 
             // Exponer funciones específicas para que script.js las use
             window.firebase_storage_fns = { ref, uploadBytesResumable, getDownloadURL, deleteObject };
