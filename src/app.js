@@ -1,6 +1,4 @@
-import { onAuth, login, logout } from './auth.js'
-
-const PORTFOLIO_UID = '2yfOh8VB1cPSbEfFnRSfdzDR6eh2'
+import { onAuth, login, logout, getUser } from './auth.js'
 import {
   subscribeItems,
   subscribeFolders,
@@ -12,7 +10,8 @@ import {
   updateItem,
   saveProfile,
 } from './firestore.js'
-import { uploadFile, deleteStorageFile, uploadProfilePhoto, uploadPreviewImage } from './storage.js'
+import { uploadFile, deleteStorageFile, uploadProfilePhoto } from './storage.js'
+import { testFirebaseConnection } from './firebase.js'
 import {
   showNotification,
   closeModal,
@@ -37,56 +36,56 @@ class FolderPersonal {
     this.unsubscribeProfile = null
     this.onConfirm = null
     this.pendingPhotoURL = null
-    this.isOwner = false
-    this.userId = PORTFOLIO_UID
-
-    document.querySelector('.container').style.display = 'flex'
-    document.getElementById('loginContainer').classList.add('hidden')
-
-    this.setupLoginListeners()
-    this.startApp()
 
     onAuth((user) => {
-      if (user && user.uid === PORTFOLIO_UID) {
-        console.log('[Auth] Propietario autenticado:', user.email)
-        this.isOwner = true
-        this.onOwnerReady()
-      } else if (user) {
-        console.log('[Auth] Otro usuario:', user.email)
-        this.isOwner = false
-        this.onVisitorMode()
+      const loginEl = document.getElementById('loginContainer')
+      const mainEl = document.querySelector('.container')
+
+      if (user) {
+        console.log('[Auth] Usuario autenticado:', user.email, 'uid:', user.uid)
+        this.userId = user.uid
+        if (!this.userId) {
+          console.error('[Auth] ERROR: user.uid es undefined!', user)
+          showNotification('Error de autenticacion: uid no encontrado', 'error')
+          return
+        }
+        loginEl.classList.add('hidden')
+        mainEl.style.display = 'flex'
+        this.startApp()
       } else {
-        console.log('[Auth] Visitante')
-        this.isOwner = false
-        this.onVisitorMode()
+        console.log('[Auth] No hay usuario autenticado')
+        this.userId = null
+        if (this.unsubscribeItems) this.unsubscribeItems()
+        if (this.unsubscribeFolders) this.unsubscribeFolders()
+        if (this.unsubscribeProfile) this.unsubscribeProfile()
+        this.items = []
+        this.folders = []
+        loginEl.classList.remove('hidden')
+        mainEl.style.display = 'none'
+        this.setupLoginListeners()
       }
     })
   }
 
-  onOwnerReady() {
-    document.getElementById('userEmail').textContent = 'brayan@undc.edu.pe'
-    document.getElementById('userBadge').textContent = 'brayan@undc.edu.pe'
-    document.getElementById('btnLoginHeader').style.display = 'none'
-    document.getElementById('btnAdd').style.display = 'flex'
-    document.getElementById('btnNewFolder').style.display = 'inline-flex'
-    document.getElementById('profileEmail').textContent = 'brayan@undc.edu.pe'
-    this.loadProfile()
-  }
-
-  onVisitorMode() {
-    document.getElementById('btnLoginHeader').style.display = 'inline-flex'
-    document.getElementById('btnAdd').style.display = 'none'
-    document.getElementById('btnNewFolder').style.display = 'none'
-    document.getElementById('profileEmail').textContent = 'cargando...'
-  }
-
   startApp() {
+    const user = getUser()
+    document.getElementById('userEmail').textContent = user.email
+    document.getElementById('profileEmail').textContent = user.email
+    document.getElementById('userBadge').textContent = user.email
     applyTheme(getSavedTheme())
     this.setupAppListeners()
     this.loadData()
     this.showProfileView()
     this.loadProfile()
-    console.log('[App] Portafolio publico cargado')
+    testFirebaseConnection().then((res) => {
+      console.log('[App] Conexion Firebase:', res)
+      if (!res.storage) {
+        showNotification(
+          'Storage no accesible. Revisa las reglas de seguridad en Firebase Console.',
+          'error'
+        )
+      }
+    })
   }
 
   showProfileView() {
@@ -101,7 +100,6 @@ class FolderPersonal {
     document.querySelectorAll('.nav-item').forEach((b) => b.classList.remove('active'))
     const profileBtn = document.querySelector('[data-filter="profile"]')
     if (profileBtn) profileBtn.classList.add('active')
-    document.getElementById('btnEditProfile').style.display = this.isOwner ? 'inline-block' : 'none'
   }
 
   loadData() {
@@ -162,10 +160,6 @@ class FolderPersonal {
     const clone = btn.cloneNode(true)
     btn.parentNode.replaceChild(clone, btn)
     clone.addEventListener('click', () => this.handleLogin())
-
-    document.getElementById('btnLoginHeader')?.addEventListener('click', () => {
-      openModal(document.getElementById('loginModal'))
-    })
   }
 
   async handleLogin() {
@@ -179,7 +173,6 @@ class FolderPersonal {
     try {
       errEl.textContent = ''
       await login(email, password)
-      closeModal(document.getElementById('loginModal'))
     } catch {
       errEl.textContent = 'Correo o contraseña incorrectos.'
     }
@@ -231,11 +224,6 @@ class FolderPersonal {
 
     document.getElementById('btnDelete')?.addEventListener('click', () => this.confirmDelete())
     document.getElementById('btnDownload')?.addEventListener('click', () => this.downloadItem())
-    document.getElementById('btnEditItem')?.addEventListener('click', () => this.openEditItem())
-    document.getElementById('btnSaveEditItem')?.addEventListener('click', () => this.saveEditItem())
-    document.getElementById('btnCancelEditItem')?.addEventListener('click', () => {
-      closeModal(document.getElementById('editItemModal'))
-    })
     document.getElementById('btnConfirmDelete')?.addEventListener('click', () => {
       if (this.onConfirm) this.onConfirm()
     })
@@ -270,38 +258,6 @@ class FolderPersonal {
     })
     document.getElementById('btnChangePhoto')?.addEventListener('click', () => {
       document.getElementById('profilePhotoInput')?.click()
-    })
-    document.getElementById('linkPreviewUrl')?.addEventListener('input', (e) => {
-      const img = document.getElementById('linkPreviewImg')
-      const val = e.target.value.trim()
-      if (val) {
-        img.src = val
-        img.style.display = 'block'
-      } else {
-        img.style.display = 'none'
-      }
-    })
-    document.getElementById('btnUploadLinkPreview')?.addEventListener('click', () => {
-      document.getElementById('linkPreviewFileInput')?.click()
-    })
-    document.getElementById('linkPreviewFileInput')?.addEventListener('change', (e) => {
-      if (e.target.files.length) this.handleLinkPreviewUpload(e.target.files[0])
-    })
-    document.getElementById('btnUploadEditPreview')?.addEventListener('click', () => {
-      document.getElementById('editPreviewFileInput')?.click()
-    })
-    document.getElementById('editPreviewFileInput')?.addEventListener('change', (e) => {
-      if (e.target.files.length) this.handleEditPreviewUpload(e.target.files[0])
-    })
-    document.getElementById('editItemPreview')?.addEventListener('input', (e) => {
-      const img = document.getElementById('editItemPreviewImg')
-      const val = e.target.value.trim()
-      if (val) {
-        img.src = val
-        img.style.display = 'block'
-      } else {
-        img.style.display = 'none'
-      }
     })
     document.getElementById('profilePhotoInput')?.addEventListener('change', (e) => {
       if (e.target.files.length) this.handleProfilePhoto(e.target.files[0])
@@ -401,10 +357,6 @@ class FolderPersonal {
   }
 
   promptNewFolder() {
-    if (!this.isOwner) {
-      showNotification('Debes iniciar sesion como propietario.', 'error')
-      return
-    }
     const name = prompt('Nombre de la nueva carpeta:')
     if (name && name.trim()) {
       addFolder(this.userId, name.trim(), this.currentFolderId)
@@ -487,15 +439,14 @@ class FolderPersonal {
 
   itemCard(item) {
     let preview = ''
-    const itemPreview = item.preview || (item.type === 'link' ? item.image : null)
-    if (itemPreview) {
-      preview = `<img src="${itemPreview}" alt="${item.name}" loading="lazy" style="object-fit:cover" onerror="this.style.display='none'">`
-    } else if (item.type === 'image') {
+    if (item.type === 'image') {
       preview = `<img src="${item.url}" alt="${item.name}" loading="lazy" onerror="this.style.display='none'">`
     } else if (item.type === 'video') {
       preview = `<video><source src="${item.url}"></video>`
     } else if (item.type === 'link') {
-      preview = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
+      preview = item.image
+        ? `<img src="${item.image}" alt="${item.name}" style="object-fit:cover" onerror="this.style.display='none'">`
+        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M10 13a5 5 0 0 0 7.54.54l3-3a5 5 0 0 0-7.07-7.07l-1.72 1.71"/><path d="M14 11a5 5 0 0 0-7.54-.54l-3 3a5 5 0 0 0 7.07 7.07l1.71-1.71"/></svg>`
     } else {
       preview = `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
     }
@@ -519,11 +470,8 @@ class FolderPersonal {
     const title = document.getElementById('viewModalTitle')
     const body = document.getElementById('viewModalBody')
     const btnDownload = document.getElementById('btnDownload')
-    const btnEdit = document.getElementById('btnEditItem')
     title.textContent = this.selectedItem.name
-    document.getElementById('btnDelete').style.display = this.isOwner ? 'inline-block' : 'none'
-
-    const itemPreview = this.selectedItem.preview || (this.selectedItem.type === 'link' ? this.selectedItem.image : null)
+    document.getElementById('btnDelete').style.display = 'inline-block'
 
     if (this.selectedItem.type === 'image') {
       body.innerHTML = `<div class="view-image"><img src="${this.selectedItem.url}" alt="${this.selectedItem.name}"></div>`
@@ -533,8 +481,8 @@ class FolderPersonal {
       btnDownload.style.display = 'inline-block'
     } else if (this.selectedItem.type === 'link') {
       body.innerHTML = `<div class="link-preview">${
-        itemPreview
-          ? `<img src="${itemPreview}" class="link-preview-img" onerror="this.style.display='none'">`
+        this.selectedItem.image
+          ? `<img src="${this.selectedItem.image}" class="link-preview-img" onerror="this.style.display='none'">`
           : ''
       }<div class="link-preview-content"><div class="link-preview-title">${
         this.selectedItem.name
@@ -545,24 +493,19 @@ class FolderPersonal {
       }</a></div></div>`
       btnDownload.style.display = 'inline-block'
     } else {
-      const docPreview = itemPreview
-        ? `<img src="${itemPreview}" style="max-width:100%;max-height:300px;object-fit:contain;border-radius:8px" onerror="this.style.display='none'">`
-        : `<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="64" height="64"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>`
-      body.innerHTML = `<div class="view-document">${docPreview}<p style="margin-top:12px">${this.selectedItem.name}</p><p style="font-size:12px;color:var(--text-secondary)">${this.selectedItem.size}</p></div>`
+      body.innerHTML = `<div class="view-document"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg><p>${this.selectedItem.name}</p><p style="font-size:12px;color:var(--text-secondary)">${this.selectedItem.size}</p></div>`
       btnDownload.style.display = 'inline-block'
     }
-    btnEdit.style.display = this.isOwner ? 'inline-block' : 'none'
     openModal(modal)
   }
 
   handleFileSelect(files) {
     if (!files.length) return
-    if (!this.isOwner) {
-      showNotification('Debes iniciar sesion como propietario para subir archivos.', 'error')
+    if (!this.userId) {
+      showNotification('Error: No hay sesion activa. Cierra sesion y vuelve a iniciar.', 'error')
+      console.error('[Upload] this.userId es null/undefined')
       return
     }
-    const previewUrl = document.getElementById('previewUrl')?.value.trim() || null
-    document.getElementById('previewUrl').value = ''
     closeModal(document.getElementById('addModal'))
     for (const file of files) {
       const type = getFileType(file.type, file.name)
@@ -570,11 +513,11 @@ class FolderPersonal {
         showNotification(`Tipo no soportado: ${file.name}`, 'error')
         continue
       }
-      this.uploadAndSave(file, type, previewUrl)
+      this.uploadAndSave(file, type)
     }
   }
 
-  async uploadAndSave(file, type, previewUrl) {
+  async uploadAndSave(file, type) {
     const progressText = document.getElementById('progressText')
     const progressFill = document.getElementById('progressFill')
     const progressDiv = document.getElementById('uploadProgress')
@@ -584,22 +527,24 @@ class FolderPersonal {
         if (progressText) progressText.textContent = `Subiendo ${file.name}... ${Math.round(p)}%`
         if (progressFill) progressFill.style.width = `${p}%`
       })
-      const itemData = {
+      const docRef = await addItem(this.userId, {
         name: file.name,
         type,
         size: formatFileSize(file.size),
         url: downloadURL,
         path: filePath,
         folderId: this.currentFolderId,
-      }
-      if (previewUrl) itemData.preview = previewUrl
-      const docRef = await addItem(this.userId, itemData)
-      const newItem = {
+      })
+      this.items.unshift({
         id: docRef.id,
-        ...itemData,
+        name: file.name,
+        type,
+        size: formatFileSize(file.size),
+        url: downloadURL,
+        path: filePath,
+        folderId: this.currentFolderId,
         createdAt: new Date(),
-      }
-      this.items.unshift(newItem)
+      })
       showNotification(`${file.name} subido correctamente`, 'success')
       if (this.currentFilter === 'profile') {
         const btn = document.querySelector(`[data-filter="${type}"]`)
@@ -631,27 +576,31 @@ class FolderPersonal {
       showNotification('Ingresa una URL', 'error')
       return
     }
-    if (!this.isOwner) {
-      showNotification('Debes iniciar sesion como propietario para agregar enlaces.', 'error')
+    if (!this.userId) {
+      showNotification('Error: No hay sesion activa. Cierra sesion y vuelve a iniciar.', 'error')
+      console.error('[AddLink] this.userId es null')
       return
     }
-    const manualPreview = document.getElementById('linkPreviewUrl')?.value.trim() || null
     showNotification('Obteniendo vista previa...', 'info')
     closeModal(document.getElementById('addModal'))
     const ogData = await this.getOpenGraphData(url)
     try {
-      const linkData = {
+      const docRef = await addItem(this.userId, {
         name: customTitle || ogData.title || url,
         type: 'link',
         url,
+        image: ogData.image || null,
         description: ogData.description || null,
         folderId: this.currentFolderId,
-        image: manualPreview || ogData.image || null,
-      }
-      const docRef = await addItem(this.userId, linkData)
+      })
       this.items.unshift({
         id: docRef.id,
-        ...linkData,
+        name: customTitle || ogData.title || url,
+        type: 'link',
+        url,
+        image: ogData.image || null,
+        description: ogData.description || null,
+        folderId: this.currentFolderId,
         createdAt: new Date(),
       })
       showNotification('Enlace agregado', 'success')
@@ -663,40 +612,23 @@ class FolderPersonal {
       }
       if (linkInput) linkInput.value = ''
       if (linkTitleInput) linkTitleInput.value = ''
-      document.getElementById('linkPreviewUrl').value = ''
     } catch {
       showNotification('Error al agregar enlace', 'error')
     }
   }
 
-  async getOpenGraphData(url) {
-    const proxies = [
-      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
-      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
-    ]
-    for (const proxy of proxies) {
-      try {
-        const res = await fetch(proxy)
-        const data = await res.json()
-        const html = data.contents || data.body || ''
-        const doc = new DOMParser().parseFromString(html, 'text/html')
-        const image = doc.querySelector('meta[property="og:image"]')?.content
-          || doc.querySelector('meta[name="twitter:image"]')?.content
-          || doc.querySelector('link[rel="image_src"]')?.href
-          || null
-        const description = doc.querySelector('meta[property="og:description"]')?.content
-          || doc.querySelector('meta[name="description"]')?.content
-          || null
-        const title = doc.querySelector('meta[property="og:title"]')?.content
-          || doc.querySelector('title')?.textContent
-          || null
-        return { image, description, title }
-      } catch (e) {
-        console.warn('[OG] Proxy fallo:', proxy.split('?')[0], e.message)
-      }
-    }
-    showNotification('No se pudo obtener vista previa. Usa el campo "URL de imagen personalizada".', 'info')
-    return { image: null, description: null, title: null }
+  getOpenGraphData(url) {
+    return fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`)
+      .then((r) => r.json())
+      .then((data) => {
+        const doc = new DOMParser().parseFromString(data.contents, 'text/html')
+        return {
+          image: doc.querySelector('meta[property="og:image"]')?.content || null,
+          description: doc.querySelector('meta[property="og:description"]')?.content || null,
+          title: doc.querySelector('meta[property="og:title"]')?.content || null,
+        }
+      })
+      .catch(() => ({ image: null, description: null, title: null }))
   }
 
   showAddModal() {
@@ -782,17 +714,8 @@ class FolderPersonal {
       window.open(this.selectedItem.url, '_blank')
       return
     }
-    if (this.selectedItem.url?.startsWith('data:')) {
-      const a = document.createElement('a')
-      a.href = this.selectedItem.url
-      a.download = this.selectedItem.name
-      document.body.appendChild(a)
-      a.click()
-      a.remove()
-      return
-    }
-    showNotification('Iniciando descarga...', 'info')
     try {
+      showNotification('Iniciando descarga...', 'info')
       const res = await fetch(this.selectedItem.url)
       const blob = await res.blob()
       const url = window.URL.createObjectURL(blob)
@@ -830,10 +753,6 @@ class FolderPersonal {
   }
 
   async saveProfileData() {
-    if (!this.isOwner) {
-      showNotification('Debes iniciar sesion como propietario.', 'error')
-      return
-    }
     const data = {
       name: document.getElementById('editName').value.trim(),
       career: document.getElementById('editCareer').value.trim(),
@@ -857,89 +776,7 @@ class FolderPersonal {
     }
   }
 
-  async handleLinkPreviewUpload(file) {
-    if (!file.type.startsWith('image/')) {
-      showNotification('Solo se aceptan imagenes', 'error')
-      return
-    }
-    showNotification('Subiendo imagen...', 'info')
-    try {
-      const url = await uploadPreviewImage(file)
-      document.getElementById('linkPreviewUrl').value = url
-      const img = document.getElementById('linkPreviewImg')
-      img.src = url
-      img.style.display = 'block'
-      showNotification('Imagen lista como preview', 'success')
-    } catch (e) {
-      showNotification('Error al subir imagen: ' + e.message, 'error')
-    }
-  }
-
-  async handleEditPreviewUpload(file) {
-    if (!file.type.startsWith('image/')) {
-      showNotification('Solo se aceptan imagenes', 'error')
-      return
-    }
-    showNotification('Subiendo imagen...', 'info')
-    try {
-      const url = await uploadPreviewImage(file)
-      document.getElementById('editItemPreview').value = url
-      const img = document.getElementById('editItemPreviewImg')
-      img.src = url
-      img.style.display = 'block'
-      showNotification('Imagen lista como preview', 'success')
-    } catch (e) {
-      showNotification('Error al subir imagen: ' + e.message, 'error')
-    }
-  }
-
-  openEditItem() {
-    if (!this.selectedItem) return
-    document.getElementById('editItemTitle').textContent = `Editar: ${this.selectedItem.name}`
-    document.getElementById('editItemName').value = this.selectedItem.name
-    const previewVal = this.selectedItem.preview || (this.selectedItem.type === 'link' ? this.selectedItem.image : '') || ''
-    document.getElementById('editItemPreview').value = previewVal
-    const img = document.getElementById('editItemPreviewImg')
-    if (previewVal) {
-      img.src = previewVal
-      img.style.display = 'block'
-    } else {
-      img.style.display = 'none'
-    }
-    closeModal(document.getElementById('viewModal'))
-    openModal(document.getElementById('editItemModal'))
-  }
-
-  async saveEditItem() {
-    if (!this.selectedItem) return
-    const newName = document.getElementById('editItemName').value.trim()
-    const newPreview = document.getElementById('editItemPreview').value.trim() || null
-    if (!newName) {
-      showNotification('El nombre no puede estar vacio', 'error')
-      return
-    }
-    try {
-      await updateItem(this.userId, this.selectedItem.id, { name: newName, preview: newPreview })
-      this.selectedItem.name = newName
-      this.selectedItem.preview = newPreview
-      const item = this.items.find((i) => i.id === this.selectedItem.id)
-      if (item) {
-        item.name = newName
-        item.preview = newPreview
-      }
-      showNotification('Actualizado', 'success')
-      closeModal(document.getElementById('editItemModal'))
-      this.render()
-    } catch {
-      showNotification('Error al actualizar', 'error')
-    }
-  }
-
   async handleProfilePhoto(file) {
-    if (!this.isOwner) {
-      showNotification('Debes iniciar sesion como propietario.', 'error')
-      return
-    }
     if (!file) return
     if (!file.type.startsWith('image/')) {
       showNotification('Solo se aceptan imágenes', 'error')

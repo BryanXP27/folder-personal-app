@@ -1,8 +1,20 @@
 import { initializeApp } from 'firebase/app'
-import { getAuth } from 'firebase/auth'
-import { getFirestore } from 'firebase/firestore'
-import { getStorage, ref, uploadString, deleteObject } from 'firebase/storage'
-import { collection, getDocs, query, limit } from 'firebase/firestore'
+import { getAuth, connectAuthEmulator } from 'firebase/auth'
+import { getStorage, connectStorageEmulator } from 'firebase/storage'
+import {
+  getFirestore,
+  connectFirestoreEmulator,
+  collection,
+  getDocs,
+  query,
+  limit,
+} from 'firebase/firestore'
+import {
+  ref,
+  uploadString,
+  getDownloadURL,
+  deleteObject,
+} from 'firebase/storage'
 
 const firebaseConfig = {
   apiKey: import.meta.env.VITE_FIREBASE_API_KEY,
@@ -13,6 +25,12 @@ const firebaseConfig = {
   appId: import.meta.env.VITE_FIREBASE_APP_ID,
   measurementId: import.meta.env.VITE_FIREBASE_MEASUREMENT_ID,
 }
+
+console.log('[Firebase] Config:', {
+  apiKey: firebaseConfig.apiKey?.slice(0, 10) + '...',
+  projectId: firebaseConfig.projectId,
+  storageBucket: firebaseConfig.storageBucket,
+})
 
 const app = initializeApp(firebaseConfig)
 
@@ -27,7 +45,9 @@ export async function testFirebaseConnection() {
     const testQuery = query(collection(db, '_health_check_'), limit(1))
     await getDocs(testQuery)
     results.firestore = true
+    console.log('[Firebase] Firestore conexion OK')
   } catch (e) {
+    console.warn('[Firebase] Firestore error (puede ser normal si no existe _health_check_):', e.message)
     results.firestore = true
   }
 
@@ -36,12 +56,14 @@ export async function testFirebaseConnection() {
     await uploadString(testRef, 'ok')
     await deleteObject(testRef)
     results.storage = true
+    console.log('[Firebase] Storage conexion OK')
   } catch (e) {
-    console.warn('[Firebase] Storage test:', e.message)
+    console.error('[Firebase] Storage ERROR:', e.message)
     results.storage = false
   }
 
   results.auth = !!auth.currentUser
+
   return results
 }
 

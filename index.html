@@ -7,25 +7,26 @@
     <link rel="stylesheet" href="src/styles.css">
 </head>
 <body>
-    <!-- Login Modal -->
-    <div class="modal" id="loginModal">
-        <div class="modal-content" style="max-width:400px">
-            <div class="modal-header">
-                <h3>Iniciar Sesión (Propietario)</h3>
-                <button class="modal-close">&times;</button>
+    <!-- Login Screen -->
+    <div class="login-container" id="loginContainer">
+        <div class="login-box">
+            <div class="logo">
+                <svg class="logo-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+                    <path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"></path>
+                </svg>
+                <h1>Folder Personal</h1>
             </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="emailInput">Correo Electrónico</label>
-                    <input type="email" id="emailInput" placeholder="tu@correo.com">
-                </div>
-                <div class="form-group">
-                    <label for="passwordInput">Contraseña</label>
-                    <input type="password" id="passwordInput" placeholder="••••••••">
-                </div>
-                <button class="btn-primary" id="btnLogin" style="width:100%">Iniciar Sesión</button>
-                <p id="loginError" class="login-error"></p>
+            <h3>Iniciar Sesión</h3>
+            <div class="form-group">
+                <label for="emailInput">Correo Electrónico</label>
+                <input type="email" id="emailInput" placeholder="tu@correo.com">
             </div>
+            <div class="form-group">
+                <label for="passwordInput">Contraseña</label>
+                <input type="password" id="passwordInput" placeholder="••••••••">
+            </div>
+            <button class="btn-primary" id="btnLogin">Iniciar Sesión</button>
+            <p id="loginError" class="login-error"></p>
         </div>
     </div>
 
@@ -121,7 +122,6 @@
                         </svg>
                         <span>Agregar</span>
                     </button>
-                    <button class="btn-secondary" id="btnLoginHeader" style="display:none;font-size:13px;padding:6px 14px">Iniciar Sesión</button>
                     <span class="user-badge" id="userBadge"></span>
                 </div>
             </header>
@@ -204,10 +204,6 @@
                             <div class="progress-fill" id="progressFill" style="width: 0%"></div>
                         </div>
                     </div>
-                    <div class="form-group" style="margin-top:16px">
-                        <label for="previewUrl">URL de imagen de vista previa (opcional):</label>
-                        <input type="url" id="previewUrl" placeholder="https://ejemplo.com/imagen.jpg">
-                    </div>
                     <div class="upload-info">
                         <p><strong>Formatos soportados:</strong></p>
                         <ul>
@@ -228,15 +224,6 @@
                     <div class="form-group">
                         <label for="linkTitle">Título (opcional):</label>
                         <input type="text" id="linkTitle" placeholder="Mi enlace favorito">
-                    </div>
-                    <div class="form-group">
-                        <label>Imagen de vista previa:</label>
-                        <div style="display:flex;gap:8px;flex-wrap:wrap">
-                            <input type="url" id="linkPreviewUrl" placeholder="URL de imagen..." style="flex:1;min-width:180px">
-                            <button class="btn-secondary" type="button" id="btnUploadLinkPreview" style="white-space:nowrap">Subir imagen</button>
-                        </div>
-                        <input type="file" id="linkPreviewFileInput" accept="image/*" hidden>
-                        <img id="linkPreviewImg" style="max-width:150px;max-height:100px;border-radius:6px;display:none;margin-top:8px;object-fit:cover">
                     </div>
                     <button class="btn-primary" id="btnAddLink">Agregar enlace</button>
                 </div>
@@ -267,13 +254,6 @@
                         <path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path>
                     </svg>
                     Eliminar
-                </button>
-                <button class="btn-secondary" id="btnEditItem" style="display:none;">
-                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" width="16" height="16">
-                        <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
-                        <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
-                    </svg>
-                    Editar
                 </button>
             </div>
         </div>
@@ -396,34 +376,6 @@
             <div class="modal-footer">
                 <button class="btn-secondary" id="btnCancelEdit">Cancelar</button>
                 <button class="btn-primary" id="btnSaveProfile">Guardar</button>
-            </div>
-        </div>
-    </div>
-
-    <!-- Modal Editar Item -->
-    <div class="modal" id="editItemModal">
-        <div class="modal-content">
-            <div class="modal-header">
-                <h3 id="editItemTitle">Editar</h3>
-                <button class="modal-close">&times;</button>
-            </div>
-            <div class="modal-body">
-                <div class="form-group">
-                    <label for="editItemName">Nombre:</label>
-                    <input type="text" id="editItemName" placeholder="Nombre del archivo">
-                </div>
-                <div class="form-group">
-                    <label>Imagen de vista previa:</label>
-                    <div style="display:flex;gap:8px;flex-wrap:wrap">
-                        <input type="url" id="editItemPreview" placeholder="URL de imagen..." style="flex:1;min-width:180px">
-                        <button class="btn-secondary" type="button" id="btnUploadEditPreview" style="white-space:nowrap">Subir imagen</button>
-                    </div>
-                    <input type="file" id="editPreviewFileInput" accept="image/*" hidden>
-                    <img id="editItemPreviewImg" style="max-width:200px;max-height:150px;border-radius:8px;display:none;margin-top:8px;object-fit:cover">
-            </div>
-            <div class="modal-footer">
-                <button class="btn-secondary" id="btnCancelEditItem">Cancelar</button>
-                <button class="btn-primary" id="btnSaveEditItem">Guardar</button>
             </div>
         </div>
     </div>
