@@ -629,18 +629,34 @@ class FolderPersonal {
     }
   }
 
-  getOpenGraphData(url) {
-    return fetch(`https://api.allorigins.win/get?url=${encodeURIComponent(url)}`)
-      .then((r) => r.json())
-      .then((data) => {
-        const doc = new DOMParser().parseFromString(data.contents, 'text/html')
-        return {
-          image: doc.querySelector('meta[property="og:image"]')?.content || null,
-          description: doc.querySelector('meta[property="og:description"]')?.content || null,
-          title: doc.querySelector('meta[property="og:title"]')?.content || null,
-        }
-      })
-      .catch(() => ({ image: null, description: null, title: null }))
+  async getOpenGraphData(url) {
+    const proxies = [
+      `https://api.allorigins.win/get?url=${encodeURIComponent(url)}`,
+      `https://api.codetabs.com/v1/proxy?quest=${encodeURIComponent(url)}`,
+    ]
+    for (const proxy of proxies) {
+      try {
+        const res = await fetch(proxy)
+        const data = await res.json()
+        const html = data.contents || data.body || ''
+        const doc = new DOMParser().parseFromString(html, 'text/html')
+        const image = doc.querySelector('meta[property="og:image"]')?.content
+          || doc.querySelector('meta[name="twitter:image"]')?.content
+          || doc.querySelector('link[rel="image_src"]')?.href
+          || null
+        const description = doc.querySelector('meta[property="og:description"]')?.content
+          || doc.querySelector('meta[name="description"]')?.content
+          || null
+        const title = doc.querySelector('meta[property="og:title"]')?.content
+          || doc.querySelector('title')?.textContent
+          || null
+        return { image, description, title }
+      } catch (e) {
+        console.warn('[OG] Proxy fallo:', proxy.split('?')[0], e.message)
+      }
+    }
+    showNotification('No se pudo obtener vista previa. Usa el campo "URL de imagen personalizada".', 'info')
+    return { image: null, description: null, title: null }
   }
 
   showAddModal() {
